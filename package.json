@@ -1,0 +1,27 @@
+{
+	"name": "xtt-msg",
+	"version": "1.0.3",
+	"description": "a text processing lib",
+	"main": "dist/showText.js",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": {
+				"require": "./dist/showText.cjs",
+				"default": "./dist/showText.esm.js"
+			}
+		}
+	},
+	"scripts": {
+		"build": "rollup -c rollup.config.js"
+	},
+	"keywords": [
+		"text"
+	],
+	"author": "xtt-nami",
+	"license": "MIT",
+	"homepage": "https://github.com/xiaotong-tong/xtt/tree/master/common/showtext",
+	"devDependencies": {
+		"rollup": "^3.2.5"
+	}
+}
