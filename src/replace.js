@@ -17,7 +17,7 @@ export class Replace {
 		 * 【】 类型文本处理函数, 将当前文本中的第一层的【】内容取出并解析替换, 在解析过程中通过递归来处理第二层以及更多层的文本
 		 * 如 【1【2】【3【4】】】【5】， 解析层级 1,5 -->> 2,3 -->> 4
 		 * */
-		if (/【[\s\S]*】/.test(text)) {
+		if (/【[^】]+】/.test(text)) {
 			let parts = text.match(/[【】]|[^【】]+/g),
 				matches = [],
 				balance = 0,
@@ -43,7 +43,7 @@ export class Replace {
 				throw 'missing "】"';
 			}
 
-			matches?.forEach((matchText) => {
+			matches.forEach((matchText) => {
 				text = text.replace(matchText, (match) =>
 					this.#doTextMatch(match)
 				);
@@ -57,7 +57,7 @@ export class Replace {
 	}
 	static doReplaceToHTML(text) {
 		if (/{{{[\s\S]*}}}/.test(text)) {
-			let parts = text.match(/[\{\}]{3}|[^\{\}]+/g),
+			let parts = text.match(/[{}]{3}|[^{}]+/g),
 				matches = [],
 				balance = 0,
 				index = 0;
@@ -89,9 +89,9 @@ export class Replace {
 		/**
 		 * 根据文本的内容 查找是否有对应的解析，如果有就调用，没有就返回文本
 		 * */
-		const type = match.match(/【([\s\S]*?)(?:-->>|】)/);
-		if (type && textList[type[1]]) {
-			return textList[type[1]].call(this, type.input);
+		const type = match.match(/^【(.+?)(?=(?:-->>|】))/);
+		if (textList[type[1]]) {
+			return textList[type[1]](type.input);
 		} else {
 			return type.input;
 		}
@@ -99,7 +99,7 @@ export class Replace {
 	static #doHTMLMatch(match) {
 		const type = match.match(/{{{([\s\S]*?)[-|(?:}}})]/);
 		if (type && htmlList[type[1]]) {
-			return htmlList[type[1]].call(this, type.input);
+			return htmlList[type[1]](type.input);
 		} else {
 			return type.input;
 		}
