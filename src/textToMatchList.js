@@ -11,7 +11,7 @@ export class TextMatch {
 			balance = 0,
 			cacheList = [];
 		type.forEach((item) => {
-			if (item.match(new RegExp(left + "|" + right))) {
+			if (~item.search(new RegExp(left + "|" + right))) {
 				balance += (item.match(new RegExp(left, "g")) || []).length;
 				balance -= (item.match(new RegExp(right, "g")) || []).length;
 				cacheList.push(item);
@@ -31,7 +31,7 @@ export class TextMatch {
 	static doTextMatchList(text) {
 		const type = text.match(/(?<=-->>)[\s\S]*?(?=-->>|】$)/g);
 		if (!type) {
-			return;
+			return [];
 		}
 
 		return TextMatch.#getMatchList(type, "-->>", "【", "】").map((v) =>
@@ -42,7 +42,7 @@ export class TextMatch {
 	static doHTMLMatchList(text) {
 		const type = text.match(/(?<=-)[\s\S]*?(?=-|(?:}}})$)/g);
 		if (!type) {
-			return [text];
+			return [];
 		}
 
 		return TextMatch.#getMatchList(type, "-", "{{{", "}}}").map((v) =>
