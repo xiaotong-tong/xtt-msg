@@ -19,8 +19,12 @@ export const math = {
 			: choiceList[2];
 	},
 	计算(text) {
-		const type = TextMatch.doTextMatchList(text);
-		return Function("return " + type[0])();
+		let [content = '""'] = TextMatch.doTextMatchList(text);
+
+		if (content === "") {
+			return "";
+		}
+		return Function("return " + content)();
 	},
 	随机数(text) {
 		const minMax = TextMatch.doTextMatchList(text) || [];

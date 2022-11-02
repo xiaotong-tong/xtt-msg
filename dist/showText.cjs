@@ -92,6 +92,7 @@ class ReplaceText extends XttJS {
 	static variableMap = {};
 
 	static getTextLeft(text, stamp, limit = 1) {
+		// 处理要匹配的字符在字符串第一位的情况
 		const startGrep = new RegExp("^" + stamp);
 		if (startGrep.test(text)) {
 			if (limit <= 1) {
@@ -393,8 +394,12 @@ const math = {
 			: choiceList[2];
 	},
 	计算(text) {
-		const type = TextMatch.doTextMatchList(text);
-		return Function("return " + type[0])();
+		let [content = '""'] = TextMatch.doTextMatchList(text);
+
+		if (content === "") {
+			return "";
+		}
+		return Function("return " + content)();
 	},
 	随机数(text) {
 		const minMax = TextMatch.doTextMatchList(text) || [];
