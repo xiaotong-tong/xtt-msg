@@ -13,6 +13,7 @@
 		}
 	},
 	"scripts": {
+		"eslint": "npx eslint src/**/*.js lib/**/*.js",
 		"build": "rollup -c rollup.config.js"
 	},
 	"keywords": [
@@ -22,6 +23,7 @@
 	"license": "MIT",
 	"homepage": "https://github.com/xiaotong-tong/xtt-msg",
 	"devDependencies": {
+		"eslint": "^8.26.0",
 		"rollup": "^3.2.5"
 	}
 }
