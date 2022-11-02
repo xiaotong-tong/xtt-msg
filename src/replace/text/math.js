@@ -23,7 +23,7 @@ export const math = {
 		return Function("return " + type[0])();
 	},
 	随机数(text) {
-		const minMax = TextMatch.doTextMatchList(text);
+		const minMax = TextMatch.doTextMatchList(text) || [];
 		return ReplaceText.getRandom(minMax[0], minMax[1]);
 	},
 	权重随机数(text) {
@@ -37,4 +37,32 @@ export const math = {
 		const type = TextMatch.doTextMatchList(text);
 		return ReplaceText.nonrandom(type[0], type[1], type[2]);
 	},
+	八进制(text) {
+		const [char] = TextMatch.doTextMatchList(text) || [];
+		if (!char) {
+			return "";
+		}
+		return ReplaceText.charToCodePoint(char, 8);
+	},
+	十六进制(text) {
+		const [char] = TextMatch.doTextMatchList(text) || [];
+		if (!char) {
+			return "";
+		}
+		return ReplaceText.charToCodePoint(char, 16);
+	},
+	十进制(text) {
+		const [char] = TextMatch.doTextMatchList(text) || [];
+		if (!char) {
+			return "";
+		}
+		return ReplaceText.charToCodePoint(char, 10);
+	},
+	二进制(text) {
+		const [char] = TextMatch.doTextMatchList(text) || [];
+		if (!char) {
+			return "";
+		}
+		return ReplaceText.charToCodePoint(char, 2);
+	}
 };
