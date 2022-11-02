@@ -56,13 +56,58 @@
 			);
 			return XttJS.shuffle(randomArr);
 		}
+		static conversionBase(num, base) {
+			if (base === 16) {
+				return "0x" + num.toString(16);
+			} else if (base === 8) {
+				return "0o" + num.toString(8);
+			} else if (base === 10) {
+				return "" + num.toString(10);
+			} else if (base === 2) {
+				return "" + num.toString(2);
+			} else {
+				return num;
+			}
+		}
+		static charToCodePoint(char, base, numAsChar) {
+			if (isNaN(Number(char)) || numAsChar) {
+				return XttJS.stringToCodePointList(char)
+					.map((charPoint) => XttJS.conversionBase(charPoint, base))
+					.join("");
+			} else {
+				return XttJS.conversionBase(Number(char), base);
+			}
+		}
+		static codePointToChar(codePoint, isNumber) {
+			if (isNumber) {
+				return XttJS.conversionBase(Number(codePoint), 10);
+			}
+			return String.fromCodePoint(codePoint);
+		}
+		static stringToCodePointList(str) {
+			if (!str) {
+				return;
+			}
+			return [...str].map((char) => char.codePointAt());
+		}
 	}
 
 	class ReplaceText extends XttJS {
 		static variableMap = {};
 
-		static getTextLeft(text, stamp) {
-			return text.split(stamp)[0];
+		static getTextLeft(text, stamp, limit = 1) {
+			const startGrep = new RegExp("^" + stamp);
+			if (startGrep.test(text)) {
+				if (limit <= 1) {
+					return "";
+				} else {
+					limit -= 1;
+				}
+			}
+
+			const grep = new RegExp(`.+?(?=${stamp})`, "g");
+			// text.replace(/(?<!\\)\\(?!\\)/, "//"); // 好像不需要处理，js字符串没有一个反斜杠的情况
+			return text.match(grep).slice(0, super.getTextNum(limit)).join("");
 		}
 		static getTextRight(text, stamp) {
 			return text.substring(text.indexOf(stamp) + 1);
@@ -81,7 +126,7 @@
 				return matchType ? matchType[1] : text;
 			}
 		}
-		static getRandom(min, max) {
+		static getRandom(min = 0, max = 100) {
 			return super.getRandom(super.getTextNum(min), super.getTextNum(max));
 		}
 		static getWeightedRandom(randomList, weightedList) {
@@ -124,7 +169,7 @@
 					"星期四",
 					"星期五",
 					"星期六",
-					"星期日",
+					"星期日"
 				];
 
 			if (type) {
@@ -227,7 +272,7 @@
 				balance = 0,
 				cacheList = [];
 			type.forEach((item) => {
-				if (item.match(new RegExp(left + "|" + right))) {
+				if (~item.search(new RegExp(left + "|" + right))) {
 					balance += (item.match(new RegExp(left, "g")) || []).length;
 					balance -= (item.match(new RegExp(right, "g")) || []).length;
 					cacheList.push(item);
@@ -247,7 +292,7 @@
 		static doTextMatchList(text) {
 			const type = text.match(/(?<=-->>)[\s\S]*?(?=-->>|】$)/g);
 			if (!type) {
-				return;
+				return [];
 			}
 
 			return TextMatch.#getMatchList(type, "-->>", "【", "】").map((v) =>
@@ -258,7 +303,7 @@
 		static doHTMLMatchList(text) {
 			const type = text.match(/(?<=-)[\s\S]*?(?=-|(?:}}})$)/g);
 			if (!type) {
-				return [text];
+				return [];
 			}
 
 			return TextMatch.#getMatchList(type, "-", "{{{", "}}}").map((v) =>
@@ -269,16 +314,16 @@
 
 	const text = {
 		"文本-反转文本"(text) {
-			const type = TextMatch.doTextMatchList(text);
-			return BrowserReplaceText.reverseText(type[0]);
+			const [replaceText] = TextMatch.doTextMatchList(text);
+			return BrowserReplaceText.reverseText(replaceText);
 		},
 		"文本-取文本左"(text) {
-			const textState = TextMatch.doTextMatchList(text);
-			return BrowserReplaceText.getTextLeft(textState[0], textState[1]);
+			const [replaceText, stamp, limit] = TextMatch.doTextMatchList(text);
+			return BrowserReplaceText.getTextLeft(replaceText, stamp, limit);
 		},
 		"文本-取文本右"(text) {
-			const textState = TextMatch.doTextMatchList(text);
-			return BrowserReplaceText.getTextRight(textState[0], textState[1]);
+			const [replaceText, stamp, limit] = TextMatch.doTextMatchList(text);
+			return BrowserReplaceText.getTextRight(replaceText, stamp, limit);
 		},
 		"文本-取中间"(text) {
 			const textState = TextMatch.doTextMatchList(text);
@@ -289,13 +334,31 @@
 			);
 		},
 		"文本-替换"(text) {
-			const textState = TextMatch.doTextMatchList(text);
-			return textState[0].replaceAll(textState[1], textState[2]);
+			let [replaceText, willReplaceCharList, replaceCharList] =
+				TextMatch.doTextMatchList(text);
+			if (!replaceText) {
+				return "";
+			}
+			if (!willReplaceCharList || !replaceCharList) {
+				return replaceText;
+			}
+
+			willReplaceCharList = willReplaceCharList.split(/[,，]/);
+			replaceCharList = replaceCharList.split(/[,，]/);
+			return replaceText.replaceAll(
+				new RegExp(willReplaceCharList.join("|"), "g"),
+				(char) =>
+					replaceCharList[
+						willReplaceCharList.findIndex((willReplace) =>
+							new RegExp(willReplace).test(char)
+						)
+					] || ""
+			);
 		},
-		"文本-取出数字"(text) {
+		"文本-取数字"(text) {
 			const textState = TextMatch.doTextMatchList(text);
 			return BrowserReplaceText.getTextNum(textState[0]);
-		},
+		}
 	};
 
 	const normal = {
@@ -338,7 +401,7 @@
 			return Function("return " + type[0])();
 		},
 		随机数(text) {
-			const minMax = TextMatch.doTextMatchList(text);
+			const minMax = TextMatch.doTextMatchList(text) || [];
 			return BrowserReplaceText.getRandom(minMax[0], minMax[1]);
 		},
 		权重随机数(text) {
@@ -352,6 +415,34 @@
 			const type = TextMatch.doTextMatchList(text);
 			return BrowserReplaceText.nonrandom(type[0], type[1], type[2]);
 		},
+		八进制(text) {
+			const [char] = TextMatch.doTextMatchList(text) || [];
+			if (!char) {
+				return "";
+			}
+			return BrowserReplaceText.charToCodePoint(char, 8);
+		},
+		十六进制(text) {
+			const [char] = TextMatch.doTextMatchList(text) || [];
+			if (!char) {
+				return "";
+			}
+			return BrowserReplaceText.charToCodePoint(char, 16);
+		},
+		十进制(text) {
+			const [char] = TextMatch.doTextMatchList(text) || [];
+			if (!char) {
+				return "";
+			}
+			return BrowserReplaceText.charToCodePoint(char, 10);
+		},
+		二进制(text) {
+			const [char] = TextMatch.doTextMatchList(text) || [];
+			if (!char) {
+				return "";
+			}
+			return BrowserReplaceText.charToCodePoint(char, 2);
+		}
 	};
 
 	const html = {
@@ -375,7 +466,48 @@
 		},
 	};
 
-	const textList = Object.assign({}, text, normal, math, html);
+	BrowserReplaceText.setVariable("nyaLang", "nya,喵,~,!,\u200d,ニャー,にゃ,\u200e");
+
+	const fnText = {
+		喵语(text) {
+			const [willnyaText] = TextMatch.doTextMatchList(text);
+			if (!willnyaText) {
+				return "";
+			}
+			const nyaLang = BrowserReplaceText.getVariable("nyaLang").split(",");
+
+			return (
+				BrowserReplaceText.charToCodePoint(willnyaText, 8, true)
+					.match(/0o\d+(?!o)/g)
+					.map((char) =>
+						char.slice(2).replace(/\d/g, (num) => nyaLang[num])
+					)
+					.join("\u200c") + "."
+			);
+		},
+		解喵语(text) {
+			const [willnyaText] = TextMatch.doTextMatchList(text);
+			if (!willnyaText) {
+				return "";
+			}
+			const nyaLang = BrowserReplaceText.getVariable("nyaLang").split(",");
+			return willnyaText
+				.splice(0, -1)
+				.split("\u200c")
+				.map((char) =>
+					BrowserReplaceText.codePointToChar(
+						"0o" +
+							char.replace(
+								new RegExp(nyaLang.join("|"), "g"),
+								(str) => nyaLang.indexOf(str)
+							)
+					)
+				)
+				.join("");
+		}
+	};
+
+	const textList = Object.assign({}, text, normal, math, html, fnText);
 
 	const htmlLabel = {
 		注音(text) {
@@ -416,7 +548,7 @@
 			 * 【】 类型文本处理函数, 将当前文本中的第一层的【】内容取出并解析替换, 在解析过程中通过递归来处理第二层以及更多层的文本
 			 * 如 【1【2】【3【4】】】【5】， 解析层级 1,5 -->> 2,3 -->> 4
 			 * */
-			if (/【[\s\S]*】/.test(text)) {
+			if (/【[^】]+】/.test(text)) {
 				let parts = text.match(/[【】]|[^【】]+/g),
 					matches = [],
 					balance = 0,
@@ -442,7 +574,7 @@
 					throw 'missing "】"';
 				}
 
-				matches?.forEach((matchText) => {
+				matches.forEach((matchText) => {
 					text = text.replace(matchText, (match) =>
 						this.#doTextMatch(match)
 					);
@@ -456,7 +588,7 @@
 		}
 		static doReplaceToHTML(text) {
 			if (/{{{[\s\S]*}}}/.test(text)) {
-				let parts = text.match(/[\{\}]{3}|[^\{\}]+/g),
+				let parts = text.match(/[{}]{3}|[^{}]+/g),
 					matches = [],
 					balance = 0,
 					index = 0;
@@ -488,9 +620,9 @@
 			/**
 			 * 根据文本的内容 查找是否有对应的解析，如果有就调用，没有就返回文本
 			 * */
-			const type = match.match(/【([\s\S]*?)(?:-->>|】)/);
-			if (type && textList[type[1]]) {
-				return textList[type[1]].call(this, type.input);
+			const type = match.match(/^【(.+?)(?=(?:-->>|】))/);
+			if (textList[type[1]]) {
+				return textList[type[1]](type.input);
 			} else {
 				return type.input;
 			}
@@ -498,7 +630,7 @@
 		static #doHTMLMatch(match) {
 			const type = match.match(/{{{([\s\S]*?)[-|(?:}}})]/);
 			if (type && htmlList[type[1]]) {
-				return htmlList[type[1]].call(this, type.input);
+				return htmlList[type[1]](type.input);
 			} else {
 				return type.input;
 			}
@@ -508,25 +640,22 @@
 	/**
 	 * 个人日常使用和学习用库
 	 * 功能: 传入一串字符串, 返回按一定规则处理后的字符串
-	 *  如：  【文本-反转文本-->>反转文本】, 将返回 本文转反 四个字符
 	 * */
 
 	class ShowText {
 		static showText(text) {
 			/**
-			 * 入口函数, 对数据进行预先处理, 如将 【 左侧的空格和换行 以及 】 右侧的空格和换行删除
+			 * 入口函数, 对数据进行预先处理, 清除 【 左侧的空格和换行 以及 】 右侧的空格和换行
 			 * */
-			let resText = text;
-
-			if (/【[\s\S]*】/.test(text)) {
+			if (/【[^】]+】/.test(text)) {
 				try {
 					text = text.replace(/\s+(?=【)|(?<=】)\s+/g, "");
-					resText = Replace.doReplace(text);
+					return Replace.doReplace(text);
 				} catch (e) {
-					resText = e;
+					return e;
 				}
 			}
-			return resText;
+			return text;
 		}
 	}
 
