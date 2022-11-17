@@ -12,8 +12,11 @@ export class TextMatch {
 			cacheList = [];
 		type.forEach((item) => {
 			if (~item.search(new RegExp(left + "|" + right))) {
-				balance += (item.match(new RegExp(left, "g")) || []).length;
-				balance -= (item.match(new RegExp(right, "g")) || []).length;
+				balance =
+					balance +
+					(item.match(new RegExp(left, "g")) || []).length -
+					(item.match(new RegExp(right, "g")) || []).length;
+
 				cacheList.push(item);
 				if (balance === 0) {
 					list.push(cacheList.join(divide));
@@ -28,15 +31,19 @@ export class TextMatch {
 		return list;
 	}
 
-	static doTextMatchList(text) {
+	static doTextMatchList(text, noParseContent) {
 		const type = text.match(/(?<=-->>)[\s\S]*?(?=-->>|】$)/g);
 		if (!type) {
 			return [];
 		}
 
-		return TextMatch.#getMatchList(type, "-->>", "【", "】").map((v) =>
-			Replace.doReplaceToText(v)
-		);
+		const content = TextMatch.#getMatchList(type, "-->>", "【", "】");
+
+		if (noParseContent) {
+			return content;
+		} else {
+			return content.map(Replace.doReplaceToText);
+		}
 	}
 
 	static doHTMLMatchList(text) {
@@ -45,8 +52,8 @@ export class TextMatch {
 			return [];
 		}
 
-		return TextMatch.#getMatchList(type, "-", "{{{", "}}}").map((v) =>
-			Replace.doReplaceToHTML(v)
+		return TextMatch.#getMatchList(type, "-", "{{{", "}}}").map(
+			Replace.doReplaceToHTML
 		);
 	}
 }

@@ -9,7 +9,7 @@ export class Replace {
 		 * 【】解析的内容如果需要格外添加 html标签的话，会暂时返回 {{{}}} 格式内容
 		 * doReplaceToHTML 会将 {{{}}}格式转为对应的 html标签文本
 		 * */
-		return this.doReplaceToHTML(this.doReplaceToText(text));
+		return Replace.doReplaceToHTML(Replace.doReplaceToText(text));
 	}
 
 	static doReplaceToText(text) {
@@ -44,12 +44,10 @@ export class Replace {
 			}
 
 			matches.forEach((matchText) => {
-				text = text.replace(matchText, (match) =>
-					this.#doTextMatch(match)
-				);
-				if (this.backText) {
-					text = this.backText;
-					this.backText = "";
+				text = text.replace(matchText, (match) => Replace.#doTextMatch(match));
+				if (Replace.backText) {
+					text = Replace.backText;
+					Replace.backText = "";
 				}
 			});
 		}
@@ -79,7 +77,7 @@ export class Replace {
 			matches?.forEach(
 				(matchText) =>
 					(text = text.replace(matchText, (match) =>
-						this.#doHTMLMatch(match)
+						Replace.#doHTMLMatch(match)
 					))
 			);
 		}
