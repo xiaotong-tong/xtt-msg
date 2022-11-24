@@ -10,10 +10,30 @@ class XttJS {
 		return resText;
 	}
 	static getTextNum(text) {
+		let sign = 1;
 		if (typeof text === "number") {
 			return text;
 		}
-		return parseFloat(text) || +text.replace(/\D/g, "");
+		if (!~text.search(/\d/)) {
+			return "";
+		}
+		const removeNaNChar = (str) => {
+			return str.replace(/\D/g, "");
+		};
+		if (text.startsWith("-")) {
+			sign = -1;
+		}
+		const pointIndex = text.indexOf(".");
+		if (~pointIndex) {
+			return (
+				sign *
+				`${removeNaNChar(text.slice(0, pointIndex))}.${removeNaNChar(
+					text.slice(pointIndex + 1)
+				)}`
+			);
+		} else {
+			return sign * removeNaNChar(text);
+		}
 	}
 	static getRandom(min, max) {
 		// 返回一个包含 min 和 max 的随机数
@@ -46,10 +66,7 @@ class XttJS {
 		if (min === max) {
 			return max;
 		}
-		let randomArr = Array.from(
-			{ length: max - min + 1 },
-			(v, i) => i + min
-		);
+		let randomArr = Array.from({ length: max - min + 1 }, (v, i) => i + min);
 		return XttJS.shuffle(randomArr);
 	}
 	static conversionBase(num, base) {
@@ -106,8 +123,12 @@ class ReplaceText extends XttJS {
 		// text.replace(/(?<!\\)\\(?!\\)/, "//"); // 好像不需要处理，js字符串没有一个反斜杠的情况
 		return text.match(grep).slice(0, super.getTextNum(limit)).join("");
 	}
-	static getTextRight(text, stamp) {
-		return text.substring(text.indexOf(stamp) + 1);
+	static getTextRight(text, stamp, limit = 1) {
+		let step = super.getTextNum(limit);
+		const grep = new RegExp(`(?<=(^|${stamp})).*?(${stamp}|$)`, "g");
+		const matchList = text.match(grep);
+
+		return matchList.slice(step).join("");
 	}
 	static getTextCenter(text, leftStamp, rightStamp) {
 		let matchType = text.match(
@@ -129,7 +150,7 @@ class ReplaceText extends XttJS {
 	static getWeightedRandom(randomList, weightedList) {
 		return super.getWeightedRandom(
 			randomList,
-			weightedList.map((v) => super.getTextNum(v))
+			weightedList.slice(0, randomList.length).map((v) => super.getTextNum(v))
 		);
 	}
 	static nonrandom(min = 1, max = 10, variable) {
@@ -205,7 +226,7 @@ class ReplaceText extends XttJS {
 		if (res.next) {
 			let data = res.next();
 			if (data.done) {
-				return "已经获取完了哦~";
+				return "已经获取完了哦~再重新赋值一个吧！";
 			} else {
 				return data.value;
 			}
@@ -319,23 +340,40 @@ class TextMatch {
 const text = {
 	"文本-反转文本"(text) {
 		const [replaceText] = TextMatch.doTextMatchList(text);
+		if (!replaceText) {
+			return "";
+		}
 		return BrowserReplaceText.reverseText(replaceText);
 	},
 	"文本-取文本左"(text) {
 		const [replaceText, stamp, limit] = TextMatch.doTextMatchList(text);
+		if (!replaceText) {
+			return "";
+		}
+		if (!stamp) {
+			return replaceText;
+		}
+
 		return BrowserReplaceText.getTextLeft(replaceText, stamp, limit);
 	},
 	"文本-取文本右"(text) {
 		const [replaceText, stamp, limit] = TextMatch.doTextMatchList(text);
+		if (!replaceText) {
+			return "";
+		}
+		if (!stamp) {
+			return replaceText;
+		}
+
 		return BrowserReplaceText.getTextRight(replaceText, stamp, limit);
 	},
 	"文本-取中间"(text) {
-		const textState = TextMatch.doTextMatchList(text);
-		return BrowserReplaceText.getTextCenter(
-			textState[0],
-			textState[1],
-			textState[2]
-		);
+		const [replaceText, leftStamp, rightStamp] =
+			TextMatch.doTextMatchList(text);
+		if (!replaceText) {
+			return "";
+		}
+		return BrowserReplaceText.getTextCenter(replaceText, leftStamp, rightStamp);
 	},
 	"文本-替换"(text) {
 		let [replaceText, willReplaceCharList, replaceCharList] =
@@ -360,8 +398,11 @@ const text = {
 		);
 	},
 	"文本-取数字"(text) {
-		const textState = TextMatch.doTextMatchList(text);
-		return BrowserReplaceText.getTextNum(textState[0]);
+		const [replaceText] = TextMatch.doTextMatchList(text);
+		if (!replaceText) {
+			return "";
+		}
+		return BrowserReplaceText.getTextNum(replaceText);
 	}
 };
 
@@ -454,15 +495,24 @@ const math = {
 		return BrowserReplaceText.getRandom(min || 1, max || 100);
 	},
 	权重随机数(text) {
-		const type = TextMatch.doTextMatchList(text);
-		return BrowserReplaceText.getWeightedRandom(
-			type[0].split(/[,，]/),
-			type[1].split(/[,，]/)
-		);
+		const [randomText, weightedText] = TextMatch.doTextMatchList(text);
+		if (!randomText) {
+			return "";
+		}
+		const randomList = randomText.split(/[,，]/);
+		let weightedList = [];
+		if (!weightedText) {
+			for (let i = 0; i < randomList.length - 1; i++) {
+				weightedList.push(1);
+			}
+		} else {
+			weightedList = weightedText.split(/[,，]/);
+		}
+		return BrowserReplaceText.getWeightedRandom(randomList, weightedList);
 	},
 	非重随机数(text) {
-		const type = TextMatch.doTextMatchList(text);
-		return BrowserReplaceText.nonrandom(type[0], type[1], type[2]);
+		const [min, max, variable] = TextMatch.doTextMatchList(text);
+		return BrowserReplaceText.nonrandom(min || 1, max || 10, variable);
 	},
 	八进制(text) {
 		const [char] = TextMatch.doTextMatchList(text) || [];
@@ -528,9 +578,7 @@ const fnText = {
 		return (
 			BrowserReplaceText.charToCodePoint(willnyaText, 8, true)
 				.match(/0o\d+(?!o)/g)
-				.map((char) =>
-					char.slice(2).replace(/\d/g, (num) => nyaLang[num])
-				)
+				.map((char) => char.slice(2).replace(/\d/g, (num) => nyaLang[num]))
 				.join("\u200c") + "."
 		);
 	},
@@ -541,14 +589,13 @@ const fnText = {
 		}
 		const nyaLang = BrowserReplaceText.getVariable("nyaLang").split(",");
 		return willnyaText
-			.splice(0, -1)
+			.substring(0, willnyaText.length - 1)
 			.split("\u200c")
 			.map((char) =>
 				BrowserReplaceText.codePointToChar(
 					"0o" +
-						char.replace(
-							new RegExp(nyaLang.join("|"), "g"),
-							(str) => nyaLang.indexOf(str)
+						char.replace(new RegExp(nyaLang.join("|"), "g"), (str) =>
+							nyaLang.indexOf(str)
 						)
 				)
 			)

@@ -73,15 +73,24 @@ export const math = {
 		return ReplaceText.getRandom(min || 1, max || 100);
 	},
 	权重随机数(text) {
-		const type = TextMatch.doTextMatchList(text);
-		return ReplaceText.getWeightedRandom(
-			type[0].split(/[,，]/),
-			type[1].split(/[,，]/)
-		);
+		const [randomText, weightedText] = TextMatch.doTextMatchList(text);
+		if (!randomText) {
+			return "";
+		}
+		const randomList = randomText.split(/[,，]/);
+		let weightedList = [];
+		if (!weightedText) {
+			for (let i = 0; i < randomList.length - 1; i++) {
+				weightedList.push(1);
+			}
+		} else {
+			weightedList = weightedText.split(/[,，]/);
+		}
+		return ReplaceText.getWeightedRandom(randomList, weightedList);
 	},
 	非重随机数(text) {
-		const type = TextMatch.doTextMatchList(text);
-		return ReplaceText.nonrandom(type[0], type[1], type[2]);
+		const [min, max, variable] = TextMatch.doTextMatchList(text);
+		return ReplaceText.nonrandom(min || 1, max || 10, variable);
 	},
 	八进制(text) {
 		const [char] = TextMatch.doTextMatchList(text) || [];
