@@ -14,9 +14,7 @@ export const fnText = {
 		return (
 			ReplaceText.charToCodePoint(willnyaText, 8, true)
 				.match(/0o\d+(?!o)/g)
-				.map((char) =>
-					char.slice(2).replace(/\d/g, (num) => nyaLang[num])
-				)
+				.map((char) => char.slice(2).replace(/\d/g, (num) => nyaLang[num]))
 				.join("\u200c") + "."
 		);
 	},
@@ -27,14 +25,13 @@ export const fnText = {
 		}
 		const nyaLang = ReplaceText.getVariable("nyaLang").split(",");
 		return willnyaText
-			.splice(0, -1)
+			.substring(0, willnyaText.length - 1)
 			.split("\u200c")
 			.map((char) =>
 				ReplaceText.codePointToChar(
 					"0o" +
-						char.replace(
-							new RegExp(nyaLang.join("|"), "g"),
-							(str) => nyaLang.indexOf(str)
+						char.replace(new RegExp(nyaLang.join("|"), "g"), (str) =>
+							nyaLang.indexOf(str)
 						)
 				)
 			)

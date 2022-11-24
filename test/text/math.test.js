@@ -1,4 +1,5 @@
 const { showTextBrowser } = require("../../dist/showText.cjs");
+const { expect } = require("@jest/globals");
 
 test("计算", () => {
 	let input = "【计算-->>3+2】";
@@ -114,6 +115,65 @@ test("随机数", () => {
 
 	input = "【随机数-->>10-->>1】";
 	value = +showTextBrowser(input);
+	expect(value).toBeGreaterThanOrEqual(1);
+	expect(value).toBeLessThanOrEqual(10);
+});
+
+test("权重随机数", () => {
+	let input = "【权重随机数-->>1,2,3,4,5-->>1,1,2,2,1】";
+	let value = +showTextBrowser(input);
+	expect(value).toBeGreaterThanOrEqual(1);
+	expect(value).toBeLessThanOrEqual(5);
+
+	input = "【权重随机数】";
+	expect(showTextBrowser(input)).toBe("");
+
+	input = "【权重随机数-->>-->>1,1,2,2,1】";
+	expect(showTextBrowser(input)).toBe("");
+
+	input = "【权重随机数-->>1,2,3,4,5】";
+	value = +showTextBrowser(input);
+	expect(value).toBeGreaterThanOrEqual(1);
+	expect(value).toBeLessThanOrEqual(5);
+
+	input = "【权重随机数-->>1,2,3-->>1,1,2,2,1】";
+	value = +showTextBrowser(input);
+	expect(value).toBeGreaterThanOrEqual(1);
+	expect(value).toBeLessThanOrEqual(3);
+});
+
+expect.extend({
+	toBeStrArrayBetweenMinAndMax: (actual, min, max) => {
+		const array = actual.split(",");
+		if (new Set(array).size !== max - min + 1) {
+			throw new Error("number count is error!");
+		}
+		if (Math.max(...array) !== max || Math.min(...array) !== min) {
+			return {
+				message: "min or max number is error!",
+				pass: false
+			};
+		} else {
+			return {
+				pass: true
+			};
+		}
+	}
+});
+test("非重随机数", () => {
+	let input = "【非重随机数-->>1-->>10】";
+	let value = showTextBrowser(input);
+	expect(value).toBeStrArrayBetweenMinAndMax(1, 10);
+
+	input = "【非重随机数】";
+	value = showTextBrowser(input);
+	expect(value).toBeStrArrayBetweenMinAndMax(1, 10);
+
+	input = "【非重随机数-->>1-->>10-->>a】";
+	value = showTextBrowser(input);
+	expect(value).toBe("");
+
+	value = +showTextBrowser("【变量-->>a】");
 	expect(value).toBeGreaterThanOrEqual(1);
 	expect(value).toBeLessThanOrEqual(10);
 });
