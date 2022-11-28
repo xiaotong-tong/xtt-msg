@@ -19,13 +19,19 @@ export const fnText = {
 		);
 	},
 	解喵语(text) {
-		const [willnyaText] = TextMatch.doTextMatchList(text);
+		let [willnyaText] = TextMatch.doTextMatchList(text);
 		if (!willnyaText) {
 			return "";
 		}
 		const nyaLang = ReplaceText.getVariable("nyaLang").split(",");
+		willnyaText = willnyaText.substring(0, willnyaText.length - 1);
+
+		const isNyaTextGrep = new RegExp(`^(${nyaLang.join("|")}|\u200c)+$`);
+		if (!isNyaTextGrep.test(willnyaText)) {
+			throw "遇到了不认识的喵语呢。";
+		}
+
 		return willnyaText
-			.substring(0, willnyaText.length - 1)
 			.split("\u200c")
 			.map((char) =>
 				ReplaceText.codePointToChar(

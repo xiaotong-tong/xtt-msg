@@ -77,7 +77,7 @@ class XttJS {
 		} else if (base === 10) {
 			return "" + num.toString(10);
 		} else if (base === 2) {
-			return "" + num.toString(2);
+			return "0b" + num.toString(2);
 		} else {
 			return num;
 		}
@@ -174,49 +174,48 @@ class ReplaceText extends XttJS {
 	static getDate(newDate = Date.now(), type) {
 		const date = new Date(newDate),
 			year = date.getFullYear(),
-			month = date.getMonth() + 1 + "",
+			month = (date.getMonth() + 1).toString().padStart(2, "0"),
 			day = date.getDate().toString().padStart(2, "0"),
 			hour = date.getHours().toString().padStart(2, "0"),
 			minutes = date.getMinutes().toString().padStart(2, "0"),
 			seconds = date.getSeconds().toString().padStart(2, "0"),
 			week = date.getDay(),
 			weekList = [
+				"星期日",
 				"星期一",
 				"星期二",
 				"星期三",
 				"星期四",
 				"星期五",
-				"星期六",
-				"星期日"
+				"星期六"
 			];
 
-		if (type) {
-			if (type === "all") {
-				return `${year}-${month}-${day} ${hour}:${minutes}:${seconds} ${
-					weekList[week - 1]
-				}`;
-			}
-
-			return type.replace(/年|月|日|时|分|秒|星期/g, (value) => {
-				switch (value) {
-					case "年":
-						return year;
-					case "月":
-						return month;
-					case "日":
-						return day;
-					case "时":
-						return hour;
-					case "分":
-						return minutes;
-					case "秒":
-						return seconds;
-					case "星期":
-						return weekList[week - 1];
-				}
-			});
+		if (!type) {
+			return `${year}-${month}-${day} ${hour}:${minutes}:${seconds}`;
 		}
-		return `${year}-${month}-${day} ${hour}:${minutes}:${seconds}`;
+
+		if (type === "all") {
+			return `${year}-${month}-${day} ${hour}:${minutes}:${seconds} ${weekList[week]}`;
+		}
+
+		return type.replace(/年|月|日|时|分|秒|星期/g, (value) => {
+			switch (value) {
+				case "年":
+					return year;
+				case "月":
+					return month;
+				case "日":
+					return day;
+				case "时":
+					return hour;
+				case "分":
+					return minutes;
+				case "秒":
+					return seconds;
+				case "星期":
+					return weekList[week];
+			}
+		});
 	}
 	static getVariable(key) {
 		let res = this.variableMap[key];
@@ -243,27 +242,13 @@ class BrowserReplaceText extends ReplaceText {
 	static #isNodeText(text) {
 		return /^<[\s\S]+>$/.test(text);
 	}
-	static reverseText(text) {
-		let resText = "";
-		// 因为命令文本反转后无法正常解析，此处将一些命令用 {{{}}}包围，然后反转文本时将 {{{}}}内的内容文本排除
-		text.split(/({{{[\s\S]*?}}})/).forEach(
-			(text) =>
-				(resText += /{{{[\s\S]*}}}/.test(text)
-					? text
-					: super.reverseText(text))
-		);
-		return resText;
-	}
 	static getRubyHTML(text, rt) {
 		return `<ruby>${text}<rp>(</rp><rt>${rt}</rt><rp>)</rp></ruby>`;
 	}
 	static setTextColor(text, color) {
 		// 如果文本就是一个标签文本的话 那直接追加 style属性，不是的话那就追加一个span标签
 		if (this.#isNodeText(text)) {
-			return text.replace(
-				/^<([\s\S]+?)>/,
-				`<$1 style="color: ${color}">`
-			);
+			return text.replace(/^<([\s\S]+?)>/, `<$1 style="color: ${color}">`);
 		} else {
 			return `<span style="color: ${color}" >${text}</span>`;
 		}
@@ -324,17 +309,6 @@ class TextMatch {
 			return content.map(Replace.doReplaceToText);
 		}
 	}
-
-	static doHTMLMatchList(text) {
-		const type = text.match(/(?<=-)[\s\S]*?(?=-|(?:}}})$)/g);
-		if (!type) {
-			return [];
-		}
-
-		return TextMatch.#getMatchList(type, "-", "{{{", "}}}").map(
-			Replace.doReplaceToHTML
-		);
-	}
 }
 
 const text = {
@@ -388,13 +362,9 @@ const text = {
 		willReplaceCharList = willReplaceCharList.split(/[,，]/);
 		replaceCharList = replaceCharList.split(/[,，]/);
 		return replaceText.replaceAll(
-			new RegExp(willReplaceCharList.join("|"), "g"),
-			(char) =>
-				replaceCharList[
-					willReplaceCharList.findIndex((willReplace) =>
-						new RegExp(willReplace).test(char)
-					)
-				] || ""
+			new RegExp(willReplaceCharList.map((v) => "(" + v + ")").join("|"), "g"),
+			(char, ...catchList) =>
+				replaceCharList[catchList.findIndex((temp) => temp !== undefined)] || ""
 		);
 	},
 	"文本-取数字"(text) {
@@ -409,7 +379,7 @@ const text = {
 const normal = {
 	当前时间(text) {
 		const type = TextMatch.doTextMatchList(text);
-		return BrowserReplaceText.getDate(+new Date(), type && type[0]);
+		return BrowserReplaceText.getDate(Date.now(), type && type[0]);
 	},
 	返回(text) {
 		const type = TextMatch.doTextMatchList(text);
@@ -421,7 +391,7 @@ const normal = {
 		return type.length === 1
 			? BrowserReplaceText.getVariable(type[0])
 			: BrowserReplaceText.setVariable(type[0], type[1]);
-	},
+	}
 };
 
 const math = {
@@ -547,22 +517,22 @@ const math = {
 const html = {
 	"文本-注音"(text) {
 		const textState = TextMatch.doTextMatchList(text);
-		return `{{{注音-${textState[0]}-${textState[1]}}}}`;
+		return BrowserReplaceText.getRubyHTML(textState[0], textState[1]);
 	},
 	"文本-文字颜色"(text) {
 		const textState = TextMatch.doTextMatchList(text);
-		return `{{{文字颜色-${textState[0]}-${textState[1]}}}}`;
+		return BrowserReplaceText.setTextColor(textState[0], textState[1]);
 	},
 	"文本-黑幕"(text) {
 		const textState = TextMatch.doTextMatchList(text);
-		return `{{{黑幕-${textState[0]}}}}`;
+		return BrowserReplaceText.getHeimuHTML(textState[0]);
 	},
 	换行() {
-		return "{{{换行}}}";
+		return "<br />";
 	},
 	空格() {
-		return "{{{空格}}}";
-	},
+		return "&nbsp;";
+	}
 };
 
 BrowserReplaceText.setVariable("nyaLang", "nya,喵,~,!,\u200d,ニャー,にゃ,\u200e");
@@ -583,13 +553,19 @@ const fnText = {
 		);
 	},
 	解喵语(text) {
-		const [willnyaText] = TextMatch.doTextMatchList(text);
+		let [willnyaText] = TextMatch.doTextMatchList(text);
 		if (!willnyaText) {
 			return "";
 		}
 		const nyaLang = BrowserReplaceText.getVariable("nyaLang").split(",");
+		willnyaText = willnyaText.substring(0, willnyaText.length - 1);
+
+		const isNyaTextGrep = new RegExp(`^(${nyaLang.join("|")}|\u200c)+$`);
+		if (!isNyaTextGrep.test(willnyaText)) {
+			throw "遇到了不认识的喵语呢。";
+		}
+
 		return willnyaText
-			.substring(0, willnyaText.length - 1)
 			.split("\u200c")
 			.map((char) =>
 				BrowserReplaceText.codePointToChar(
@@ -605,29 +581,6 @@ const fnText = {
 
 const textList = Object.assign({}, text, normal, math, html, fnText);
 
-const htmlLabel = {
-	注音(text) {
-		const type = TextMatch.doHTMLMatchList(text);
-		return BrowserReplaceText.getRubyHTML(type[0], type[1]);
-	},
-	文字颜色(text) {
-		const type = TextMatch.doHTMLMatchList(text);
-		return BrowserReplaceText.setTextColor(type[0], type[1]);
-	},
-	黑幕(text) {
-		const type = TextMatch.doHTMLMatchList(text);
-		return BrowserReplaceText.getHeimuHTML(type[0]);
-	},
-	换行() {
-		return "<br />";
-	},
-	空格() {
-		return "&nbsp;";
-	},
-};
-
-const htmlList = Object.assign({}, htmlLabel);
-
 class Replace {
 	static backText;
 
@@ -636,7 +589,7 @@ class Replace {
 		 * 【】解析的内容如果需要格外添加 html标签的话，会暂时返回 {{{}}} 格式内容
 		 * doReplaceToHTML 会将 {{{}}}格式转为对应的 html标签文本
 		 * */
-		return Replace.doReplaceToHTML(Replace.doReplaceToText(text));
+		return Replace.doReplaceToText(text);
 	}
 
 	static doReplaceToText(text) {
@@ -680,36 +633,6 @@ class Replace {
 		}
 		return text;
 	}
-	static doReplaceToHTML(text) {
-		if (/{{{[\s\S]*}}}/.test(text)) {
-			let parts = text.match(/[{}]{3}|[^{}]+/g),
-				matches = [],
-				balance = 0,
-				index = 0;
-
-			for (let i = 0; i < parts.length; i++) {
-				if (parts[i] === "{{{") {
-					if (balance === 0) {
-						index = i;
-					}
-					balance++;
-				} else if (parts[i] === "}}}") {
-					if (balance === 1) {
-						matches.push(parts.slice(index, i + 1).join(""));
-					}
-					balance--;
-				}
-			}
-
-			matches?.forEach(
-				(matchText) =>
-					(text = text.replace(matchText, (match) =>
-						Replace.#doHTMLMatch(match)
-					))
-			);
-		}
-		return text;
-	}
 	static #doTextMatch(match) {
 		/**
 		 * 根据文本的内容 查找是否有对应的解析，如果有就调用，没有就返回文本
@@ -717,14 +640,6 @@ class Replace {
 		const type = match.match(/^【(.+?)(?=(?:-->>|】))/);
 		if (textList[type[1]]) {
 			return textList[type[1]](type.input);
-		} else {
-			return type.input;
-		}
-	}
-	static #doHTMLMatch(match) {
-		const type = match.match(/{{{([\s\S]*?)[-|(?:}}})]/);
-		if (type && htmlList[type[1]]) {
-			return htmlList[type[1]](type.input);
 		} else {
 			return type.input;
 		}

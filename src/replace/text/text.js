@@ -52,13 +52,9 @@ export const text = {
 		willReplaceCharList = willReplaceCharList.split(/[,，]/);
 		replaceCharList = replaceCharList.split(/[,，]/);
 		return replaceText.replaceAll(
-			new RegExp(willReplaceCharList.join("|"), "g"),
-			(char) =>
-				replaceCharList[
-					willReplaceCharList.findIndex((willReplace) =>
-						new RegExp(willReplace).test(char)
-					)
-				] || ""
+			new RegExp(willReplaceCharList.map((v) => "(" + v + ")").join("|"), "g"),
+			(char, ...catchList) =>
+				replaceCharList[catchList.findIndex((temp) => temp !== undefined)] || ""
 		);
 	},
 	"文本-取数字"(text) {
