@@ -1,16 +1,28 @@
 :host {
 	display: flex;
-	height: 100px;
+	height: 112px;
 	font-size: 14px;
 	color: #333;
 }
+:host([heightSize="large"]) {
+	height: 224px;
+}
 :host > div {
-	flex: 1;
+	flex: none;
 	border: thin solid #ccc;
+	box-sizing: border-box;
 	padding: 0.5em;
+	white-space: pre;
+	overflow: auto;
+}
+#left {
+	width: calc((100% - 100px) / 5 * 3);
+}
+#right {
+	width: calc((100% - 100px) / 5 * 2);
 }
 #center {
-	flex: 0 0 100px;
+	width: 100px;
 	border: none;
 	display: flex;
 	align-content: center;
@@ -23,4 +35,19 @@
 }
 #left:focus {
 	outline: none;
+}
+
+:host ::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+	margin: 5px 0;
+}
+:host ::-webkit-scrollbar-thumb {
+	margin: 5px 0;
+	border-radius: 15px;
+	background-image: linear-gradient(#c9d1d9, #c9d1d9);
+}
+:host ::-webkit-scrollbar-track {
+	margin: 5px 0;
+	border-radius: 15px;
 }

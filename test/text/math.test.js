@@ -177,3 +177,71 @@ test("非重随机数", () => {
 	expect(value).toBeGreaterThanOrEqual(1);
 	expect(value).toBeLessThanOrEqual(10);
 });
+
+test("八进制", () => {
+	let input = "【八进制-->>10】";
+	expect(showTextBrowser(input)).toBe("0o12");
+
+	input = "【八进制-->>H】";
+	expect(showTextBrowser(input)).toBe("0o110");
+
+	input = "【八进制-->>八】";
+	expect(showTextBrowser(input)).toBe("0o50553");
+
+	input = "【八进制-->>】";
+	expect(showTextBrowser(input)).toBe("");
+
+	input = "【八进制】";
+	expect(showTextBrowser(input)).toBe("");
+});
+
+test("十六进制", () => {
+	let input = "【十六进制-->>10】";
+	expect(showTextBrowser(input)).toBe("0xa");
+
+	input = "【十六进制-->>H】";
+	expect(showTextBrowser(input)).toBe("0x48");
+
+	input = "【十六进制-->>八】";
+	expect(showTextBrowser(input)).toBe("0x516b");
+
+	input = "【十六进制-->>】";
+	expect(showTextBrowser(input)).toBe("");
+
+	input = "【十六进制】";
+	expect(showTextBrowser(input)).toBe("");
+});
+
+test("十进制", () => {
+	let input = "【十进制-->>0xa】";
+	expect(showTextBrowser(input)).toBe("10");
+
+	input = "【十进制-->>H】";
+	expect(showTextBrowser(input)).toBe("72");
+
+	input = "【十进制-->>八】";
+	expect(showTextBrowser(input)).toBe("20843");
+
+	input = "【十进制-->>】";
+	expect(showTextBrowser(input)).toBe("");
+
+	input = "【十进制】";
+	expect(showTextBrowser(input)).toBe("");
+});
+
+test("二进制", () => {
+	let input = "【二进制-->>10】";
+	expect(showTextBrowser(input)).toBe("0b1010");
+
+	input = "【二进制-->>H】";
+	expect(showTextBrowser(input)).toBe("0b1001000");
+
+	input = "【二进制-->>八】";
+	expect(showTextBrowser(input)).toBe("0b101000101101011");
+
+	input = "【二进制-->>】";
+	expect(showTextBrowser(input)).toBe("");
+
+	input = "【二进制】";
+	expect(showTextBrowser(input)).toBe("");
+});

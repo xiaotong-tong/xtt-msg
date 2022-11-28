@@ -45,15 +45,4 @@ export class TextMatch {
 			return content.map(Replace.doReplaceToText);
 		}
 	}
-
-	static doHTMLMatchList(text) {
-		const type = text.match(/(?<=-)[\s\S]*?(?=-|(?:}}})$)/g);
-		if (!type) {
-			return [];
-		}
-
-		return TextMatch.#getMatchList(type, "-", "{{{", "}}}").map(
-			Replace.doReplaceToHTML
-		);
-	}
 }

@@ -102,3 +102,29 @@ test("文本-取数字", () => {
 	input = "【文本-取数字】";
 	expect(showTextBrowser(input)).toBe("");
 });
+
+test("文本-替换", () => {
+	let input = "【文本-替换-->>我是xtt-->>x-->>xx】";
+	expect(showTextBrowser(input)).toBe("我是xxtt");
+
+	input = "【文本-替换-->>1我是2xtt3-->>1,2,3-->>a,b,c】";
+	expect(showTextBrowser(input)).toBe("a我是bxttc");
+
+	input = "【文本-替换-->>1我是2xtt3-->>\\d-->>a】";
+	expect(showTextBrowser(input)).toBe("a我是axtta");
+
+	input = "【文本-替换-->>1我是2xtt3-->>\\d,x,t(?=t)-->>a,b,c】";
+	expect(showTextBrowser(input)).toBe("a我是abcta");
+
+	input = "【文本-替换-->>1我是2xtt3-->>\\d,x,t(?=t)-->>a,b】";
+	expect(showTextBrowser(input)).toBe("a我是abta");
+
+	input = "【文本-替换-->>1我是2xtt3-->>\\d,x,t(?=t)】";
+	expect(showTextBrowser(input)).toBe("1我是2xtt3");
+
+	input = "【文本-替换-->>】";
+	expect(showTextBrowser(input)).toBe("");
+
+	input = "【文本-替换】";
+	expect(showTextBrowser(input)).toBe("");
+});
