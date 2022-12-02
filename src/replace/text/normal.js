@@ -8,14 +8,27 @@ export const normal = {
 		return ReplaceText.getDate(Date.now(), type && type[0]);
 	},
 	返回(text) {
-		const type = TextMatch.doTextMatchList(text);
-		Replace.backText = type[0];
+		let [backText, level] = TextMatch.doTextMatchList(text);
+		if (!backText) {
+			return "";
+		}
+
+		if (level === "0") {
+			Replace.backText = backText;
+		} else {
+			Replace.backTextPrevLevel.value = backText;
+			Replace.backTextPrevLevel.isCurrentLevel = false;
+		}
+		
 		return "";
 	},
 	变量(text) {
-		const type = TextMatch.doTextMatchList(text);
-		return type.length === 1
-			? ReplaceText.getVariable(type[0])
-			: ReplaceText.setVariable(type[0], type[1]);
+		const [variableName, variableValue] = TextMatch.doTextMatchList(text);
+		if (!variableName) {
+			return "";
+		}
+		return variableValue
+			? ReplaceText.setVariable(variableName, variableValue)
+			: ReplaceText.getVariable(variableName);
 	}
 };
