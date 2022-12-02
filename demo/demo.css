@@ -21,6 +21,14 @@
 #right {
 	width: calc((100% - 100px) / 5 * 2);
 }
+
+#right .heimu {
+	background-color: #000;
+}
+#right .heimu:hover {
+	background-color: transparent;
+}
+
 #center {
 	width: 100px;
 	border: none;

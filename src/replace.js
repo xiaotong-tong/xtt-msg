@@ -2,6 +2,7 @@ import { textList } from "./replace/text/index.js";
 
 export class Replace {
 	static backText;
+	static backTextPrevLevel = {};
 
 	static doReplace(text) {
 		/**
@@ -43,7 +44,17 @@ export class Replace {
 			}
 
 			matches.forEach((matchText) => {
-				text = text.replace(matchText, (match) => Replace.#doTextMatch(match));
+				text = text.replace(matchText, (match) => {
+					const resText = Replace.#doTextMatch(match);
+					if (Replace.backTextPrevLevel.isCurrentLevel === true) {
+						const value = Replace.backTextPrevLevel.value;
+						Replace.backTextPrevLevel = {};
+						return value;
+					} else if (Replace.backTextPrevLevel.isCurrentLevel === false) {
+						Replace.backTextPrevLevel.isCurrentLevel = true;
+					}
+					return resText;
+				});
 				if (Replace.backText) {
 					text = Replace.backText;
 					Replace.backText = "";
