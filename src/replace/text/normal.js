@@ -3,12 +3,12 @@ import { TextMatch } from "../../textToMatchList.js";
 import { Replace } from "../../replace.js";
 
 export const normal = {
-	当前时间(text) {
-		const type = TextMatch.doTextMatchList(text);
+	async 当前时间(text) {
+		const type = await TextMatch.doTextMatchList(text);
 		return ReplaceText.getDate(Date.now(), type && type[0]);
 	},
-	返回(text) {
-		let [backText, level] = TextMatch.doTextMatchList(text);
+	async 返回(text) {
+		let [backText, level] = await TextMatch.doTextMatchList(text);
 		if (!backText) {
 			return "";
 		}
@@ -19,11 +19,11 @@ export const normal = {
 			Replace.backTextPrevLevel.value = backText;
 			Replace.backTextPrevLevel.isCurrentLevel = false;
 		}
-		
+
 		return "";
 	},
-	变量(text) {
-		const [variableName, variableValue] = TextMatch.doTextMatchList(text);
+	async 变量(text) {
+		const [variableName, variableValue] = await TextMatch.doTextMatchList(text);
 		if (!variableName) {
 			return "";
 		}

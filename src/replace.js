@@ -4,15 +4,23 @@ export class Replace {
 	static backText;
 	static backTextPrevLevel = {};
 
-	static doReplace(text) {
-		/**
-		 * 【】解析的内容如果需要格外添加 html标签的话，会暂时返回 {{{}}} 格式内容
-		 * doReplaceToHTML 会将 {{{}}}格式转为对应的 html标签文本
-		 * */
-		return Replace.doReplaceToText(text);
+	static MatchTextList = textList;
+
+	static async doReplace(text) {
+		return await Replace.doReplaceToText(text);
 	}
 
-	static doReplaceToText(text) {
+	static async replaceAsync(str, regex, asyncFn) {
+		const promises = [];
+		str.replace(regex, (match, ...args) => {
+			const promise = asyncFn(match, ...args);
+			promises.push(promise);
+		});
+		const data = await Promise.all(promises);
+		return str.replace(regex, () => data.shift());
+	}
+
+	static async doReplaceToText(text) {
 		/**
 		 * 【】 类型文本处理函数, 将当前文本中的第一层的【】内容取出并解析替换, 在解析过程中通过递归来处理第二层以及更多层的文本
 		 * 如 【1【2】【3【4】】】【5】， 解析层级 1,5 -->> 2,3 -->> 4
@@ -43,9 +51,9 @@ export class Replace {
 				throw 'missing "】"';
 			}
 
-			matches.forEach((matchText) => {
-				text = text.replace(matchText, (match) => {
-					const resText = Replace.#doTextMatch(match);
+			for (const matchText of matches) {
+				const replaceFn = async (match) => {
+					const resText = await Replace.#doTextMatch(match);
 					if (Replace.backTextPrevLevel.isCurrentLevel === true) {
 						const value = Replace.backTextPrevLevel.value;
 						Replace.backTextPrevLevel = {};
@@ -54,12 +62,13 @@ export class Replace {
 						Replace.backTextPrevLevel.isCurrentLevel = true;
 					}
 					return resText;
-				});
+				};
+				text = await Replace.replaceAsync(text, matchText, replaceFn);
 				if (Replace.backText) {
 					text = Replace.backText;
 					Replace.backText = "";
 				}
-			});
+			}
 		}
 		return text;
 	}
@@ -68,8 +77,8 @@ export class Replace {
 		 * 根据文本的内容 查找是否有对应的解析，如果有就调用，没有就返回文本
 		 * */
 		const type = match.match(/^【(.+?)(?=(?:-->>|】))/);
-		if (textList[type[1]]) {
-			return textList[type[1]](type.input);
+		if (Replace.MatchTextList[type[1]]) {
+			return Replace.MatchTextList[type[1]](type.input);
 		} else {
 			return type.input;
 		}

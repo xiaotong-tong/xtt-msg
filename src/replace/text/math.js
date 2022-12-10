@@ -3,17 +3,24 @@ import { TextMatch } from "../../textToMatchList.js";
 import { Replace } from "../../replace.js";
 
 export const math = {
-	选择(text) {
-		let [choicePoint, ...choiceList] = TextMatch.doTextMatchList(text, true);
+	async 选择(text) {
+		let [choicePoint, ...choiceList] = await TextMatch.doTextMatchList(
+			text,
+			true
+		);
 		if (!choicePoint) {
 			return "";
 		}
-		choicePoint = Replace.doReplaceToText(choicePoint);
+		choicePoint = await Replace.doReplaceToText(choicePoint);
 		if (isNaN(+choicePoint)) {
 			let startText = "?<" + choicePoint + ">";
-			let resChoickText = choiceList
-				.map((v) => Replace.doReplaceToText(v))
-				.find((choiceText) => choiceText.startsWith(startText));
+			let resChoickText = "";
+			for await (const choiceItem of choiceList) {
+				const temp = await Replace.doReplaceToText(choiceItem);
+				if (temp.startsWith(startText)) {
+					resChoickText = temp;
+				}
+			}
 
 			if (!resChoickText) {
 				return "";
@@ -37,15 +44,13 @@ export const math = {
 			return Replace.doReplaceToText(choiceList[choiceNum]);
 		}
 	},
-	判断(text) {
-		const [contentText, success = "", fail = ""] = TextMatch.doTextMatchList(
-			text,
-			true
-		);
+	async 判断(text) {
+		const [contentText, success = "", fail = ""] =
+			await TextMatch.doTextMatchList(text, true);
 		if (!contentText) {
 			return "";
 		}
-		const content = Replace.doReplaceToText(contentText);
+		const content = await Replace.doReplaceToText(contentText);
 
 		try {
 			// 此处使用了 Function() 来处理用户输入的数据
@@ -56,8 +61,8 @@ export const math = {
 			throw `请将${text}改为正确的判断公式`;
 		}
 	},
-	计算(text) {
-		const [content] = TextMatch.doTextMatchList(text);
+	async 计算(text) {
+		const [content] = await TextMatch.doTextMatchList(text);
 		if (!content) {
 			return "";
 		}
@@ -68,12 +73,12 @@ export const math = {
 			throw `请将${text}改为正确的计算公式`;
 		}
 	},
-	随机数(text) {
-		const [min, max] = TextMatch.doTextMatchList(text);
+	async 随机数(text) {
+		const [min, max] = await TextMatch.doTextMatchList(text);
 		return ReplaceText.getRandom(min || 1, max || 100);
 	},
-	权重随机数(text) {
-		const [randomText, weightedText] = TextMatch.doTextMatchList(text);
+	async 权重随机数(text) {
+		const [randomText, weightedText] = await TextMatch.doTextMatchList(text);
 		if (!randomText) {
 			return "";
 		}
@@ -88,33 +93,33 @@ export const math = {
 		}
 		return ReplaceText.getWeightedRandom(randomList, weightedList);
 	},
-	非重随机数(text) {
-		const [min, max, variable] = TextMatch.doTextMatchList(text);
+	async 非重随机数(text) {
+		const [min, max, variable] = await TextMatch.doTextMatchList(text);
 		return ReplaceText.nonrandom(min || 1, max || 10, variable);
 	},
-	八进制(text) {
-		const [char] = TextMatch.doTextMatchList(text) || [];
+	async 八进制(text) {
+		const [char] = (await TextMatch.doTextMatchList(text)) || [];
 		if (!char) {
 			return "";
 		}
 		return ReplaceText.charToCodePoint(char, 8);
 	},
-	十六进制(text) {
-		const [char] = TextMatch.doTextMatchList(text) || [];
+	async 十六进制(text) {
+		const [char] = (await TextMatch.doTextMatchList(text)) || [];
 		if (!char) {
 			return "";
 		}
 		return ReplaceText.charToCodePoint(char, 16);
 	},
-	十进制(text) {
-		const [char] = TextMatch.doTextMatchList(text) || [];
+	async 十进制(text) {
+		const [char] = (await TextMatch.doTextMatchList(text)) || [];
 		if (!char) {
 			return "";
 		}
 		return ReplaceText.charToCodePoint(char, 10);
 	},
-	二进制(text) {
-		const [char] = TextMatch.doTextMatchList(text) || [];
+	async 二进制(text) {
+		const [char] = (await TextMatch.doTextMatchList(text)) || [];
 		if (!char) {
 			return "";
 		}

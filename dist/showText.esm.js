@@ -196,21 +196,21 @@ class ReplaceText extends XttJS {
 			return `${year}-${month}-${day} ${hour}:${minutes}:${seconds} ${weekList[week]}`;
 		}
 
-		return type.replace(/年|月|日|时|分|秒|星期/g, (value) => {
+		return type.replace(/=(?:[年月日时分秒]|星期)=/g, (value) => {
 			switch (value) {
-				case "年":
+				case "=年=":
 					return year;
-				case "月":
+				case "=月=":
 					return month;
-				case "日":
+				case "=日=":
 					return day;
-				case "时":
+				case "=时=":
 					return hour;
-				case "分":
+				case "=分=":
 					return minutes;
-				case "秒":
+				case "=秒=":
 					return seconds;
-				case "星期":
+				case "=星期=":
 					return weekList[week];
 			}
 		});
@@ -218,7 +218,7 @@ class ReplaceText extends XttJS {
 	static getVariable(key) {
 		let res = this.variableMap[key];
 		if (res === undefined) {
-			throw "没有" + key + "变量哦";
+			throw "没有变量" + key + "哦";
 		}
 		if (res.next) {
 			let data = res.next();
@@ -246,16 +246,29 @@ class BrowserReplaceText extends ReplaceText {
 	static setTextColor(text, color) {
 		// 如果文本就是一个标签文本的话 那直接追加 style属性，不是的话那就追加一个span标签
 		if (this.#isNodeText(text)) {
-			return text.replace(/^<([\s\S]+?)>/, `<$1 style="color: ${color}">`);
+			if (!color) {
+				return text;
+			}
+			text = text.replaceAll("'", '"');
+			return text.includes("style=")
+				? text.replace(
+						/style="([\s\S]*?)"(?![;,])/,
+						`style="$1 color: ${color};"`
+				  )
+				: text.replace(/^<([^>]+?)>/, `<$1 style="color: ${color};">`);
 		} else {
-			return `<span style="color: ${color}" >${text}</span>`;
+			if (!color) {
+				return `<span>${text}</span>`;
+			}
+			return `<span style="color: ${color};" >${text}</span>`;
 		}
 	}
 	static getHeimuHTML(text) {
 		if (this.#isNodeText(text)) {
+			text = text.replaceAll("'", '"');
 			return text.includes("class=")
-				? text.replace(/class="([\s\S]+?)"/, "class='$1 heimu'")
-				: text.replace(/^<([\s\S]+?)>/, "<$1 class='heimu'>");
+				? text.replace(/class="([^"]*?)"/, 'class="$1 heimu"')
+				: text.replace(/^<([^>]+?)>/, '<$1 class="heimu">');
 		} else {
 			return `<span class="heimu">${text}</span>`;
 		}
@@ -304,21 +317,21 @@ class TextMatch {
 		if (noParseContent) {
 			return content;
 		} else {
-			return content.map(Replace.doReplaceToText);
+			return Promise.all(content.map(Replace.doReplaceToText));
 		}
 	}
 }
 
 const text = {
-	"文本-反转文本"(text) {
-		const [replaceText] = TextMatch.doTextMatchList(text);
+	async "文本-反转文本"(text) {
+		const [replaceText] = await TextMatch.doTextMatchList(text);
 		if (!replaceText) {
 			return "";
 		}
 		return BrowserReplaceText.reverseText(replaceText);
 	},
-	"文本-取文本左"(text) {
-		const [replaceText, stamp, limit] = TextMatch.doTextMatchList(text);
+	async "文本-取文本左"(text) {
+		const [replaceText, stamp, limit] = await TextMatch.doTextMatchList(text);
 		if (!replaceText) {
 			return "";
 		}
@@ -328,8 +341,8 @@ const text = {
 
 		return BrowserReplaceText.getTextLeft(replaceText, stamp, limit);
 	},
-	"文本-取文本右"(text) {
-		const [replaceText, stamp, limit] = TextMatch.doTextMatchList(text);
+	async "文本-取文本右"(text) {
+		const [replaceText, stamp, limit] = await TextMatch.doTextMatchList(text);
 		if (!replaceText) {
 			return "";
 		}
@@ -339,17 +352,17 @@ const text = {
 
 		return BrowserReplaceText.getTextRight(replaceText, stamp, limit);
 	},
-	"文本-取中间"(text) {
+	async "文本-取中间"(text) {
 		const [replaceText, leftStamp, rightStamp] =
-			TextMatch.doTextMatchList(text);
+			await TextMatch.doTextMatchList(text);
 		if (!replaceText) {
 			return "";
 		}
 		return BrowserReplaceText.getTextCenter(replaceText, leftStamp, rightStamp);
 	},
-	"文本-替换"(text) {
+	async "文本-替换"(text) {
 		let [replaceText, willReplaceCharList, replaceCharList] =
-			TextMatch.doTextMatchList(text);
+			await TextMatch.doTextMatchList(text);
 		if (!replaceText) {
 			return "";
 		}
@@ -365,8 +378,8 @@ const text = {
 				replaceCharList[catchList.findIndex((temp) => temp !== undefined)] || ""
 		);
 	},
-	"文本-取数字"(text) {
-		const [replaceText] = TextMatch.doTextMatchList(text);
+	async "文本-取数字"(text) {
+		const [replaceText] = await TextMatch.doTextMatchList(text);
 		if (!replaceText) {
 			return "";
 		}
@@ -375,35 +388,55 @@ const text = {
 };
 
 const normal = {
-	当前时间(text) {
-		const type = TextMatch.doTextMatchList(text);
+	async 当前时间(text) {
+		const type = await TextMatch.doTextMatchList(text);
 		return BrowserReplaceText.getDate(Date.now(), type && type[0]);
 	},
-	返回(text) {
-		const type = TextMatch.doTextMatchList(text);
-		Replace.backText = type[0];
+	async 返回(text) {
+		let [backText, level] = await TextMatch.doTextMatchList(text);
+		if (!backText) {
+			return "";
+		}
+
+		if (level === "0") {
+			Replace.backText = backText;
+		} else {
+			Replace.backTextPrevLevel.value = backText;
+			Replace.backTextPrevLevel.isCurrentLevel = false;
+		}
+
 		return "";
 	},
-	变量(text) {
-		const type = TextMatch.doTextMatchList(text);
-		return type.length === 1
-			? BrowserReplaceText.getVariable(type[0])
-			: BrowserReplaceText.setVariable(type[0], type[1]);
+	async 变量(text) {
+		const [variableName, variableValue] = await TextMatch.doTextMatchList(text);
+		if (!variableName) {
+			return "";
+		}
+		return variableValue
+			? BrowserReplaceText.setVariable(variableName, variableValue)
+			: BrowserReplaceText.getVariable(variableName);
 	}
 };
 
 const math = {
-	选择(text) {
-		let [choicePoint, ...choiceList] = TextMatch.doTextMatchList(text, true);
+	async 选择(text) {
+		let [choicePoint, ...choiceList] = await TextMatch.doTextMatchList(
+			text,
+			true
+		);
 		if (!choicePoint) {
 			return "";
 		}
-		choicePoint = Replace.doReplaceToText(choicePoint);
+		choicePoint = await Replace.doReplaceToText(choicePoint);
 		if (isNaN(+choicePoint)) {
 			let startText = "?<" + choicePoint + ">";
-			let resChoickText = choiceList
-				.map((v) => Replace.doReplaceToText(v))
-				.find((choiceText) => choiceText.startsWith(startText));
+			let resChoickText = "";
+			for await (const choiceItem of choiceList) {
+				const temp = await Replace.doReplaceToText(choiceItem);
+				if (temp.startsWith(startText)) {
+					resChoickText = temp;
+				}
+			}
 
 			if (!resChoickText) {
 				return "";
@@ -427,15 +460,13 @@ const math = {
 			return Replace.doReplaceToText(choiceList[choiceNum]);
 		}
 	},
-	判断(text) {
-		const [contentText, success = "", fail = ""] = TextMatch.doTextMatchList(
-			text,
-			true
-		);
+	async 判断(text) {
+		const [contentText, success = "", fail = ""] =
+			await TextMatch.doTextMatchList(text, true);
 		if (!contentText) {
 			return "";
 		}
-		const content = Replace.doReplaceToText(contentText);
+		const content = await Replace.doReplaceToText(contentText);
 
 		try {
 			// 此处使用了 Function() 来处理用户输入的数据
@@ -446,8 +477,8 @@ const math = {
 			throw `请将${text}改为正确的判断公式`;
 		}
 	},
-	计算(text) {
-		const [content] = TextMatch.doTextMatchList(text);
+	async 计算(text) {
+		const [content] = await TextMatch.doTextMatchList(text);
 		if (!content) {
 			return "";
 		}
@@ -458,12 +489,12 @@ const math = {
 			throw `请将${text}改为正确的计算公式`;
 		}
 	},
-	随机数(text) {
-		const [min, max] = TextMatch.doTextMatchList(text);
+	async 随机数(text) {
+		const [min, max] = await TextMatch.doTextMatchList(text);
 		return BrowserReplaceText.getRandom(min || 1, max || 100);
 	},
-	权重随机数(text) {
-		const [randomText, weightedText] = TextMatch.doTextMatchList(text);
+	async 权重随机数(text) {
+		const [randomText, weightedText] = await TextMatch.doTextMatchList(text);
 		if (!randomText) {
 			return "";
 		}
@@ -478,33 +509,33 @@ const math = {
 		}
 		return BrowserReplaceText.getWeightedRandom(randomList, weightedList);
 	},
-	非重随机数(text) {
-		const [min, max, variable] = TextMatch.doTextMatchList(text);
+	async 非重随机数(text) {
+		const [min, max, variable] = await TextMatch.doTextMatchList(text);
 		return BrowserReplaceText.nonrandom(min || 1, max || 10, variable);
 	},
-	八进制(text) {
-		const [char] = TextMatch.doTextMatchList(text) || [];
+	async 八进制(text) {
+		const [char] = (await TextMatch.doTextMatchList(text)) || [];
 		if (!char) {
 			return "";
 		}
 		return BrowserReplaceText.charToCodePoint(char, 8);
 	},
-	十六进制(text) {
-		const [char] = TextMatch.doTextMatchList(text) || [];
+	async 十六进制(text) {
+		const [char] = (await TextMatch.doTextMatchList(text)) || [];
 		if (!char) {
 			return "";
 		}
 		return BrowserReplaceText.charToCodePoint(char, 16);
 	},
-	十进制(text) {
-		const [char] = TextMatch.doTextMatchList(text) || [];
+	async 十进制(text) {
+		const [char] = (await TextMatch.doTextMatchList(text)) || [];
 		if (!char) {
 			return "";
 		}
 		return BrowserReplaceText.charToCodePoint(char, 10);
 	},
-	二进制(text) {
-		const [char] = TextMatch.doTextMatchList(text) || [];
+	async 二进制(text) {
+		const [char] = (await TextMatch.doTextMatchList(text)) || [];
 		if (!char) {
 			return "";
 		}
@@ -513,17 +544,26 @@ const math = {
 };
 
 const html = {
-	"文本-注音"(text) {
-		const textState = TextMatch.doTextMatchList(text);
-		return BrowserReplaceText.getRubyHTML(textState[0], textState[1]);
+	async "文本-注音"(text) {
+		const [htmlText, rp] = await TextMatch.doTextMatchList(text);
+		if (!htmlText && !rp) {
+			return "";
+		}
+		return BrowserReplaceText.getRubyHTML(htmlText, rp);
 	},
-	"文本-文字颜色"(text) {
-		const textState = TextMatch.doTextMatchList(text);
-		return BrowserReplaceText.setTextColor(textState[0], textState[1]);
+	async "文本-文字颜色"(text) {
+		const [htmlText, color] = await TextMatch.doTextMatchList(text);
+		if (!htmlText) {
+			return "";
+		}
+		return BrowserReplaceText.setTextColor(htmlText, color);
 	},
-	"文本-黑幕"(text) {
-		const textState = TextMatch.doTextMatchList(text);
-		return BrowserReplaceText.getHeimuHTML(textState[0]);
+	async "文本-黑幕"(text) {
+		const [htmlText] = await TextMatch.doTextMatchList(text);
+		if (!htmlText) {
+			return "";
+		}
+		return BrowserReplaceText.getHeimuHTML(htmlText);
 	},
 	换行() {
 		return "<br />";
@@ -536,8 +576,8 @@ const html = {
 BrowserReplaceText.setVariable("nyaLang", "nya,喵,~,!,\u200d,ニャー,にゃ,\u200e");
 
 const fnText = {
-	喵语(text) {
-		const [willnyaText] = TextMatch.doTextMatchList(text);
+	async 喵语(text) {
+		const [willnyaText] = await TextMatch.doTextMatchList(text);
 		if (!willnyaText) {
 			return "";
 		}
@@ -550,8 +590,8 @@ const fnText = {
 				.join("\u200c") + "."
 		);
 	},
-	解喵语(text) {
-		let [willnyaText] = TextMatch.doTextMatchList(text);
+	async 解喵语(text) {
+		let [willnyaText] = await TextMatch.doTextMatchList(text);
 		if (!willnyaText) {
 			return "";
 		}
@@ -581,16 +621,25 @@ const textList = Object.assign({}, text, normal, math, html, fnText);
 
 class Replace {
 	static backText;
+	static backTextPrevLevel = {};
 
-	static doReplace(text) {
-		/**
-		 * 【】解析的内容如果需要格外添加 html标签的话，会暂时返回 {{{}}} 格式内容
-		 * doReplaceToHTML 会将 {{{}}}格式转为对应的 html标签文本
-		 * */
-		return Replace.doReplaceToText(text);
+	static MatchTextList = textList;
+
+	static async doReplace(text) {
+		return await Replace.doReplaceToText(text);
 	}
 
-	static doReplaceToText(text) {
+	static async replaceAsync(str, regex, asyncFn) {
+		const promises = [];
+		str.replace(regex, (match, ...args) => {
+			const promise = asyncFn(match, ...args);
+			promises.push(promise);
+		});
+		const data = await Promise.all(promises);
+		return str.replace(regex, () => data.shift());
+	}
+
+	static async doReplaceToText(text) {
 		/**
 		 * 【】 类型文本处理函数, 将当前文本中的第一层的【】内容取出并解析替换, 在解析过程中通过递归来处理第二层以及更多层的文本
 		 * 如 【1【2】【3【4】】】【5】， 解析层级 1,5 -->> 2,3 -->> 4
@@ -621,13 +670,24 @@ class Replace {
 				throw 'missing "】"';
 			}
 
-			matches.forEach((matchText) => {
-				text = text.replace(matchText, (match) => Replace.#doTextMatch(match));
+			for (const matchText of matches) {
+				const replaceFn = async (match) => {
+					const resText = await Replace.#doTextMatch(match);
+					if (Replace.backTextPrevLevel.isCurrentLevel === true) {
+						const value = Replace.backTextPrevLevel.value;
+						Replace.backTextPrevLevel = {};
+						return value;
+					} else if (Replace.backTextPrevLevel.isCurrentLevel === false) {
+						Replace.backTextPrevLevel.isCurrentLevel = true;
+					}
+					return resText;
+				};
+				text = await Replace.replaceAsync(text, matchText, replaceFn);
 				if (Replace.backText) {
 					text = Replace.backText;
 					Replace.backText = "";
 				}
-			});
+			}
 		}
 		return text;
 	}
@@ -636,8 +696,8 @@ class Replace {
 		 * 根据文本的内容 查找是否有对应的解析，如果有就调用，没有就返回文本
 		 * */
 		const type = match.match(/^【(.+?)(?=(?:-->>|】))/);
-		if (textList[type[1]]) {
-			return textList[type[1]](type.input);
+		if (Replace.MatchTextList[type[1]]) {
+			return Replace.MatchTextList[type[1]](type.input);
 		} else {
 			return type.input;
 		}
@@ -650,14 +710,14 @@ class Replace {
  * */
 
 class ShowText {
-	static showText(text) {
+	static async showText(text) {
 		/**
 		 * 入口函数, 对数据进行预先处理, 清除 【 左侧的空格和换行 以及 】 右侧的空格和换行
 		 * */
 		if (/【[^】]+】/.test(text)) {
 			try {
 				text = text.replace(/\s+(?=【)|(?<=】)\s+/g, "");
-				return Replace.doReplace(text);
+				return await Replace.doReplace(text);
 			} catch (e) {
 				return e;
 			}
@@ -666,8 +726,22 @@ class ShowText {
 	}
 }
 
-const showTextBrowser = (text) => {
-	return ShowText.showText(text);
+var showText = {
+	showTextBrowser: (text) => {
+		return ShowText.showText(text);
+	},
+	plugins: (plugin) => {
+		if (!plugin) {
+			return;
+		}
+		let addMatchTextList;
+		if (typeof plugin === "function") {
+			addMatchTextList = plugin({ TextMatch, ReplaceText: BrowserReplaceText });
+		} else if (typeof plugin === "object") {
+			addMatchTextList = plugin;
+		}
+		Object.assign(Replace.MatchTextList, addMatchTextList);
+	}
 };
 
-export { showTextBrowser };
+export { showText as default };

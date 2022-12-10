@@ -39,13 +39,13 @@ customElements.define(
 			});
 		}
 
-		#doShowText() {
+		async #doShowText() {
 			const left = this.#shadowRoot.querySelector("#left");
 			const right = this.#shadowRoot.querySelector("#right");
 			const time = this.#shadowRoot.querySelector("#time");
 			const start = Date.now();
 			console.time("doShowText");
-			right.innerHTML = window.showText.showTextBrowser(left.textContent);
+			right.innerHTML = await window.showText.showTextBrowser(left.textContent);
 			console.timeEnd("doShowText");
 			time.textContent = "用时: " + (Date.now() - start) + "ms";
 		}
