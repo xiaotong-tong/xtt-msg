@@ -1,4 +1,4 @@
-export default {
+export default [{
 	input: "src/showText.js",
 	output: [
 		{
@@ -17,4 +17,18 @@ export default {
 			name: "showTextEsm"
 		}
 	]
-};
+}, {
+	input: "plugins/fetch.js",
+	output: [
+		{
+			file: "dist/plugins/fetch.cjs",
+			format: "cjs",
+			name: "fetchNode"
+		},
+		{
+			file: "dist/plugins/fetch.esm.js",
+			format: "esm",
+			name: "fetchEsm"
+		}
+	]
+}];

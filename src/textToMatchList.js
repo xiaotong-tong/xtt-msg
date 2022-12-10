@@ -42,7 +42,7 @@ export class TextMatch {
 		if (noParseContent) {
 			return content;
 		} else {
-			return content.map(Replace.doReplaceToText);
+			return Promise.all(content.map(Replace.doReplaceToText));
 		}
 	}
 }

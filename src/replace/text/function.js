@@ -4,8 +4,8 @@ import { TextMatch } from "../../textToMatchList.js";
 ReplaceText.setVariable("nyaLang", "nya,喵,~,!,\u200d,ニャー,にゃ,\u200e");
 
 export const fnText = {
-	喵语(text) {
-		const [willnyaText] = TextMatch.doTextMatchList(text);
+	async 喵语(text) {
+		const [willnyaText] = await TextMatch.doTextMatchList(text);
 		if (!willnyaText) {
 			return "";
 		}
@@ -18,8 +18,8 @@ export const fnText = {
 				.join("\u200c") + "."
 		);
 	},
-	解喵语(text) {
-		let [willnyaText] = TextMatch.doTextMatchList(text);
+	async 解喵语(text) {
+		let [willnyaText] = await TextMatch.doTextMatchList(text);
 		if (!willnyaText) {
 			return "";
 		}
