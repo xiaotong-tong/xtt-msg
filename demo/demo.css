@@ -23,7 +23,7 @@
 }
 
 #right .heimu {
-	background-color: #000;
+	background-color: currentColor;
 }
 #right .heimu:hover {
 	background-color: transparent;

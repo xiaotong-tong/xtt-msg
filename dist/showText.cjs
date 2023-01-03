@@ -66,7 +66,10 @@ class XttJS {
 		if (min === max) {
 			return max;
 		}
-		let randomArr = Array.from({ length: max - min + 1 }, (v, i) => i + min);
+		let randomArr = Array.from(
+			{ length: max - min + 1 },
+			(v, i) => i + min
+		);
 		return XttJS.shuffle(randomArr);
 	}
 	static conversionBase(num, base) {
@@ -150,7 +153,9 @@ class ReplaceText extends XttJS {
 	static getWeightedRandom(randomList, weightedList) {
 		return super.getWeightedRandom(
 			randomList,
-			weightedList.slice(0, randomList.length).map((v) => super.getTextNum(v))
+			weightedList
+				.slice(0, randomList.length)
+				.map((v) => super.getTextNum(v))
 		);
 	}
 	static nonrandom(min = 1, max = 10, variable) {
@@ -389,10 +394,30 @@ const text = {
 	}
 };
 
+const charList = {
+	"<&1>": "【",
+	"<&2>": "】",
+	"<&3>": "-->>"
+};
+
+const escapeChar = (str) => {
+	const values = Object.values(charList);
+	const keys = Object.keys(charList);
+	return str.replace(new RegExp(values.join("|"), "g"), (matched) => {
+		return keys[values.indexOf(matched)];
+	});
+};
+
+const unescapeChar = (str) => {
+	return str.replaceAll(/<&\d+>/g, (value) => {
+		return charList[value];
+	});
+};
+
 const normal = {
 	async 当前时间(text) {
-		const type = await TextMatch.doTextMatchList(text);
-		return BrowserReplaceText.getDate(Date.now(), type && type[0]);
+		const [range] = await TextMatch.doTextMatchList(text);
+		return BrowserReplaceText.getDate(Date.now(), range);
 	},
 	async 返回(text) {
 		let [backText, level] = await TextMatch.doTextMatchList(text);
@@ -410,13 +435,91 @@ const normal = {
 		return "";
 	},
 	async 变量(text) {
-		const [variableName, variableValue] = await TextMatch.doTextMatchList(text);
+		const [variableName, variableValue] = await TextMatch.doTextMatchList(
+			text
+		);
 		if (!variableName) {
 			return "";
 		}
 		return variableValue
 			? BrowserReplaceText.setVariable(variableName, variableValue)
 			: BrowserReplaceText.getVariable(variableName);
+	},
+	async 字符(text) {
+		const [char] = await TextMatch.doTextMatchList(text);
+		if (!char) {
+			return "";
+		}
+		return `<&${char}>`;
+	},
+	async 转义(text) {
+		let [char] = await TextMatch.doTextMatchList(text, true);
+		if (!char) {
+			return "";
+		}
+		return escapeChar(char);
+	},
+	async 反转义(text) {
+		let [char] = await TextMatch.doTextMatchList(text, true);
+		if (!char) {
+			return "";
+		}
+
+		return await Replace.doReplaceToText(unescapeChar(char));
+	},
+	async JSON(text) {
+		const [jsonText, access] = await TextMatch.doTextMatchList(text);
+		if (!jsonText) {
+			return "";
+		}
+		const objTemp = JSON.parse(jsonText);
+		let resValue = objTemp;
+		for (const key of access.matchAll(/(?<=\[)[\s\S]+?(?=\])/g)) {
+			if (resValue === undefined) {
+				return "";
+			}
+			resValue = resValue?.[Array.isArray(key) ? key[0] : key];
+		}
+		if (Array.isArray(resValue) || resValue instanceof Object) {
+			return JSON.stringify(resValue);
+		} else {
+			return resValue;
+		}
+	},
+	async 循环(text) {
+		const [foriText, foriStep, foriBody] = await TextMatch.doTextMatchList(
+			text,
+			true
+		);
+		if (!foriText) {
+			return "";
+		}
+		const [allText, step] = await Promise.all([
+			Replace.doReplaceToText(foriText),
+			Replace.doReplaceToText(foriStep)
+		]);
+		const foriMap = allText.split(new RegExp(step));
+		let i = 1;
+		for (const v of foriMap) {
+			BrowserReplaceText.setVariable("循环变量值", v);
+			BrowserReplaceText.setVariable("循环变量次数", i);
+			await Replace.doReplaceToText(foriBody);
+			i++;
+		}
+		return "";
+	},
+	async 循环变量(text) {
+		const [variableName] = await TextMatch.doTextMatchList(text);
+		if (!variableName) {
+			return "";
+		}
+		if (variableName === "值") {
+			return BrowserReplaceText.getVariable("循环变量值");
+		} else if (variableName === "次数") {
+			return BrowserReplaceText.getVariable("循环变量次数");
+		} else {
+			return "";
+		}
 	}
 };
 
@@ -716,15 +819,12 @@ class ShowText {
 		/**
 		 * 入口函数, 对数据进行预先处理, 清除 【 左侧的空格和换行 以及 】 右侧的空格和换行
 		 * */
-		if (/【[^】]+】/.test(text)) {
-			try {
-				text = text.replace(/\s+(?=【)|(?<=】)\s+/g, "");
-				return await Replace.doReplace(text);
-			} catch (e) {
-				return e;
-			}
+		try {
+			text = text.replace(/\s+(?=【)|(?<=】)\s+/g, "");
+			return unescapeChar(await Replace.doReplace(text));
+		} catch (e) {
+			return e;
 		}
-		return text;
 	}
 }
 
@@ -738,7 +838,15 @@ var showText = {
 		}
 		let addMatchTextList;
 		if (typeof plugin === "function") {
-			addMatchTextList = plugin({ TextMatch, ReplaceText: BrowserReplaceText });
+			addMatchTextList = plugin({
+				TextMatch,
+				replaceText: Object.assign(
+					{},
+					BrowserReplaceText,
+					escapeChar,
+					unescapeChar
+				)
+			});
 		} else if (typeof plugin === "object") {
 			addMatchTextList = plugin;
 		}

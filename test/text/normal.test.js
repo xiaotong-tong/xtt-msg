@@ -57,3 +57,51 @@ test("变量", async () => {
 	input = "【变量】";
 	expect(await showTextBrowser(input)).toBe("");
 });
+
+test("字符", async () => {
+	let input = "【字符-->>1】";
+	expect(await showTextBrowser(input)).toBe("【");
+
+	input = "【字符-->>2】";
+	expect(await showTextBrowser(input)).toBe("】");
+
+	input = "【字符-->>3】";
+	expect(await showTextBrowser(input)).toBe("-->>");
+
+	input = "【字符-->>】";
+	expect(await showTextBrowser(input)).toBe("");
+
+	input = "【字符】";
+	expect(await showTextBrowser(input)).toBe("");
+
+	input = "<&1><&3><&2>";
+	expect(await showTextBrowser(input)).toBe("【-->>】");
+
+	input = "lorem";
+	expect(await showTextBrowser(input)).toBe("lorem");
+});
+
+test("转义", async () => {
+	let input = "【转义-->>【计算-->>【计算-->>3+2】-【计算-->>1*2】】】";
+	expect(await showTextBrowser(input)).toBe(
+		"【计算-->>【计算-->>3+2】-【计算-->>1*2】】"
+	);
+
+	input = "【转义-->>】";
+	expect(await showTextBrowser(input)).toBe("");
+
+	input = "【转义】";
+	expect(await showTextBrowser(input)).toBe("");
+});
+
+test("反转义", async () => {
+	let input =
+		"【反转义-->><&1>计算<&3><&1>计算<&3>3+2<&2>-<&1>计算<&3>1*2<&2><&2>】";
+	expect(await showTextBrowser(input)).toBe("3");
+
+	input = "【反转义-->>】";
+	expect(await showTextBrowser(input)).toBe("");
+
+	input = "【反转义】";
+	expect(await showTextBrowser(input)).toBe("");
+});
