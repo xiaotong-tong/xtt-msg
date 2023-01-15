@@ -34,12 +34,11 @@ export default {
 		if (typeof plugin === "function") {
 			addMatchTextList = plugin({
 				TextMatch,
-				replaceText: Object.assign(
-					{},
-					ReplaceText,
-					escapeChar,
-					unescapeChar
-				)
+				replaceText: {
+					ReplaceText: ReplaceText,
+					escapeChar: escapeChar,
+					unescapeChar: unescapeChar
+				}
 			});
 		} else if (typeof plugin === "object") {
 			addMatchTextList = plugin;

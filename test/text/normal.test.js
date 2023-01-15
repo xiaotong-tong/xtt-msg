@@ -105,3 +105,27 @@ test("反转义", async () => {
 	input = "【反转义】";
 	expect(await showTextBrowser(input)).toBe("");
 });
+
+test("JSON", async () => {
+	const jsonStr =
+		'{"message":"a", "value": { "message": "b", "value": "2" }}';
+	let input = `【JSON-->>${jsonStr}-->>[message]】`;
+	expect(await showTextBrowser(input)).toBe("a");
+
+	input = `【JSON-->>${jsonStr}-->>[value][message]】`;
+	expect(await showTextBrowser(input)).toBe("b");
+
+	input = `【JSON-->>${jsonStr}-->>[value]】`;
+	expect(await showTextBrowser(input)).toBe('{"message":"b","value":"2"}');
+
+	input = `【JSON-->>${jsonStr}-->>】`;
+	expect(await showTextBrowser(input)).toBe(
+		'{"message":"a","value":{"message":"b","value":"2"}}'
+	);
+
+	input = `【JSON-->>】`;
+	expect(await showTextBrowser(input)).toBe("");
+
+	input = `【JSON】`;
+	expect(await showTextBrowser(input)).toBe("");
+});
