@@ -41,6 +41,11 @@ export default [
 				file: "dist/plugins/file.cjs",
 				format: "cjs",
 				name: "fileNode"
+			},
+			{
+				file: "dist/plugins/file.esm.js",
+				format: "esm",
+				name: "fileEsm"
 			}
 		]
 	}

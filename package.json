@@ -1,6 +1,6 @@
 {
 	"name": "xtt-msg",
-	"version": "1.0.6",
+	"version": "1.0.8",
 	"description": "a text processing lib",
 	"main": "dist/showText.js",
 	"type": "module",
@@ -9,6 +9,18 @@
 			"default": {
 				"require": "./dist/showText.cjs",
 				"default": "./dist/showText.esm.js"
+			}
+		},
+		"./plugin-fetch": {
+			"default": {
+				"require": "./dist/plugins/fetch.cjs",
+				"default": "./dist/plugins/fetch.esm.js"
+			}
+		},
+		"./plugin-file": {
+			"default": {
+				"require": "./dist/plugins/file.cjs",
+				"default": "./dist/plugins/file.esm.js"
 			}
 		}
 	},
