@@ -74,8 +74,19 @@ export const math = {
 		}
 	},
 	async 随机数(text) {
-		const [min, max] = await TextMatch.doTextMatchList(text);
-		return ReplaceText.getRandom(min || 1, max || 100);
+		let [min, max, times] = await TextMatch.doTextMatchList(text);
+		times = parseInt(times);
+		if (isNaN(times)) {
+			times = 1;
+		}
+		let res = "";
+		for (let i = 0; i < times; i++) {
+			if (i !== 0) {
+				res+= ",";
+			}
+			res += ReplaceText.getRandom(min || 1, max || 100);
+		}
+		return res;
 	},
 	async 权重随机数(text) {
 		const [randomText, weightedText] = await TextMatch.doTextMatchList(text);
