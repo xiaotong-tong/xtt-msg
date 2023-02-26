@@ -1,6 +1,6 @@
 {
 	"name": "xtt-msg",
-	"version": "1.0.8",
+	"version": "1.1.0",
 	"description": "a text processing lib",
 	"main": "dist/showText.js",
 	"type": "module",
@@ -43,5 +43,8 @@
 		"jest-html-reporters": "^3.0.11",
 		"prettier": "2.8.1",
 		"rollup": "^3.2.5"
+	},
+	"dependencies": {
+		"sqlite3": "^5.1.4"
 	}
 }
