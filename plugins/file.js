@@ -2,7 +2,7 @@ import fs from "node:fs";
 import process from "node:process";
 import path from "node:path";
 
-export const filePlugin = ({ TextMatch, replaceText }) => {
+export const filePlugin = ({ TextMatch }) => {
 	return {
 		"文件-读": async (text) => {
 			const [filePath] = await TextMatch.doTextMatchList(text);
@@ -11,7 +11,7 @@ export const filePlugin = ({ TextMatch, replaceText }) => {
 			}
 			try {
 				const data = fs.readFileSync(filePath);
-				return replaceText.escapeChar(data.toString());
+				return data.toString();
 			} catch (e) {
 				return `读取文件 ${filePath} 失败`;
 			}
@@ -48,7 +48,7 @@ export const filePlugin = ({ TextMatch, replaceText }) => {
 				throw `${filePath}不是一个文件路径`;
 			}
 			try {
-				fs.writeFileSync(filePath, replaceText.unescapeChar(content));
+				fs.writeFileSync(filePath, content);
 				return "";
 			} catch (e) {
 				return `写入文件 ${filePath} 失败`;

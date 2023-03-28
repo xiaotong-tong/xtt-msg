@@ -1,12 +1,17 @@
+import { nodeResolve } from "@rollup/plugin-node-resolve";
 export default [
 	{
 		input: "src/showText.js",
+		output: {
+			file: "dist/showText.js",
+			name: "showText",
+			format: "umd"
+		},
+		plugins: [nodeResolve()]
+	},
+	{
+		input: "src/showText.js",
 		output: [
-			{
-				file: "dist/showText.js",
-				name: "showText",
-				format: "umd"
-			},
 			{
 				file: "dist/showText.cjs",
 				format: "cjs",

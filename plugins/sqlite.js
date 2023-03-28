@@ -1,6 +1,6 @@
 import sqlite3 from "sqlite3";
 
-export const sqlitePlugin = ({ TextMatch, replaceText }) => {
+export const sqlitePlugin = ({ TextMatch }) => {
 	return {
 		"sqlite-get": async (text) => {
 			const [dbPath, select] = await TextMatch.doTextMatchList(text);

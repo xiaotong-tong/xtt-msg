@@ -86,7 +86,7 @@ customElements.define(
 
 			const rangeList = [];
 
-			for (const match of left.textContent.matchAll(/[【】]|-->>/g)) {
+			for (const match of left.textContent.matchAll(/[\[\]\(\)]|-->>/g)) {
 				const range = new Range();
 				range.setStart(left, match.index);
 				range.setEnd(left, match.index + match[0].length);

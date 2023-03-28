@@ -4,8 +4,8 @@ export class TextMatch {
 	static #getMatchList(type, divide, left, right) {
 		/**
 		 * 用分隔符将文本分为对应的数组
-		 * 如 【选择-->>2-->>【随机数-->>1-->>5】-->>【随机数-->>1-->>10】】
-		 * 将返回数组 ["【随机数-->>1-->>5】", "【随机数-->>1-->>10】"]
+		 * 如 ![选择](2-->>![随机数](1-->>5)-->>![随机数](1-->>10))
+		 * 将返回数组 ["![随机数](1-->>5)", "![随机数](1-->>10)"]
 		 * */
 		let list = [],
 			balance = 0,
@@ -32,12 +32,12 @@ export class TextMatch {
 	}
 
 	static doTextMatchList(text, noParseContent) {
-		const type = text.match(/(?<=-->>)[\s\S]*?(?=-->>|】$)/g);
+		const type = text.match(/(?<=-->>|\()[\s\S]*?(?=-->>|\)$)/g);
 		if (!type) {
 			return [];
 		}
 
-		const content = TextMatch.#getMatchList(type, "-->>", "【", "】");
+		const content = TextMatch.#getMatchList(type, "-->>", "\\(", "\\)");
 
 		if (noParseContent) {
 			return content;
