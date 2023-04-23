@@ -33,8 +33,8 @@ test("返回", async () => {
 	input = `![文本-反转文本](
 				![文本-反转文本](
 					我是xtt![返回](xtt)
-				)
-			abc)`;
+				)abc
+			)`;
 	expect(await showTextBrowser(input)).toBe("cbattx");
 
 	input = "![文本-反转文本](我是xtt![返回]())";

@@ -1,4 +1,5 @@
 import { textList } from "./replace/text/index.js";
+
 import { endsWith } from "xtt-utils/string/endsWith";
 
 export class Replace {

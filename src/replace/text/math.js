@@ -1,6 +1,16 @@
-import ReplaceText from "../.././../lib/BrowserReplaceText.js";
 import { TextMatch } from "../../textToMatchList.js";
 import { Replace } from "../../replace.js";
+import xttUtils from "xtt-utils";
+
+import { variableMap } from "../variable.js";
+
+const {
+	randomList,
+	weightedRandom,
+	nonDuplicateRandomList,
+	conversionBase,
+	charToCodePoint
+} = xttUtils;
 
 const mathMap = new Map();
 
@@ -83,14 +93,8 @@ mathMap.set(["随机数"], async (text) => {
 	if (isNaN(times)) {
 		times = 1;
 	}
-	let res = "";
-	for (let i = 0; i < times; i++) {
-		if (i !== 0) {
-			res += ",";
-		}
-		res += ReplaceText.getRandom(min || 1, max || 100);
-	}
-	return res;
+
+	return randomList(min || 1, max || 100, times).join(",");
 });
 
 mathMap.set(["权重随机数"], async (text) => {
@@ -105,14 +109,24 @@ mathMap.set(["权重随机数"], async (text) => {
 			weightedList.push(1);
 		}
 	} else {
-		weightedList = weightedText.split(/[,，]/);
+		weightedList = weightedText
+			.split(/[,，]/)
+			.map((item) => parseInt(item));
 	}
-	return ReplaceText.getWeightedRandom(randomList, weightedList);
+	return weightedRandom(randomList, weightedList);
 });
 
 mathMap.set(["非重随机数"], async (text) => {
 	const [min, max, variable] = await TextMatch.doTextMatchList(text);
-	return ReplaceText.nonrandom(min || 1, max || 10, variable);
+
+	const arr = nonDuplicateRandomList(min || 1, max || 10);
+
+	if (variable) {
+		variableMap.setVariable(variable, arr[Symbol.iterator]());
+		return "";
+	} else {
+		return arr;
+	}
 });
 
 mathMap.set(["八进制"], async (text) => {
@@ -120,7 +134,12 @@ mathMap.set(["八进制"], async (text) => {
 	if (!char) {
 		return "";
 	}
-	return ReplaceText.charToCodePoint(char, 8);
+	const num = Number(char);
+	if (Number.isNaN(num)) {
+		return charToCodePoint(char, { base: 8 });
+	} else {
+		return conversionBase(num, 8);
+	}
 });
 
 mathMap.set(["十六进制"], async (text) => {
@@ -128,7 +147,12 @@ mathMap.set(["十六进制"], async (text) => {
 	if (!char) {
 		return "";
 	}
-	return ReplaceText.charToCodePoint(char, 16);
+	const num = Number(char);
+	if (Number.isNaN(num)) {
+		return charToCodePoint(char, { base: 16 });
+	} else {
+		return conversionBase(num, 16);
+	}
 });
 
 mathMap.set(["二进制"], async (text) => {
@@ -136,7 +160,12 @@ mathMap.set(["二进制"], async (text) => {
 	if (!char) {
 		return "";
 	}
-	return ReplaceText.charToCodePoint(char, 2);
+	const num = Number(char);
+	if (Number.isNaN(num)) {
+		return charToCodePoint(char, { base: 2 });
+	} else {
+		return conversionBase(num, 2);
+	}
 });
 
 mathMap.set(["十进制"], async (text) => {
@@ -144,7 +173,12 @@ mathMap.set(["十进制"], async (text) => {
 	if (!char) {
 		return "";
 	}
-	return ReplaceText.charToCodePoint(char, 10);
+	const num = Number(char);
+	if (Number.isNaN(num)) {
+		return charToCodePoint(char, { base: 10 });
+	} else {
+		return conversionBase(num, 10);
+	}
 });
 
 export { mathMap };

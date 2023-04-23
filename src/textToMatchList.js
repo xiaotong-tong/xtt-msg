@@ -37,7 +37,9 @@ export class TextMatch {
 			return [];
 		}
 
-		const content = TextMatch.#getMatchList(type, "-->>", "\\(", "\\)");
+		const content = TextMatch.#getMatchList(type, "-->>", "\\(", "\\)").map(
+			(v) => v.trim()
+		);
 
 		if (noParseContent) {
 			return content;

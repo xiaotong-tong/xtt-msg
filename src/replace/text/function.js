@@ -1,7 +1,7 @@
-import ReplaceText from "../.././../lib/BrowserReplaceText.js";
 import { TextMatch } from "../../textToMatchList.js";
-
-ReplaceText.setVariable("nyaLang", "nya,喵,~,!,\u200d,ニャー,にゃ,\u200e");
+import { variableMap } from "../variable.js";
+import xttUtils from "xtt-utils";
+const { charToCodePoint } = xttUtils;
 
 const fnTextMap = new Map();
 
@@ -10,10 +10,10 @@ fnTextMap.set(["喵语"], async (text) => {
 	if (!willnyaText) {
 		return "";
 	}
-	const nyaLang = ReplaceText.getVariable("nyaLang").split(",");
+	const nyaLang = variableMap.getVariable("nyaLang").split(",");
 	return (
-		ReplaceText.charToCodePoint(willnyaText, 8, true)
-			.match(/0o\d+(?!o)/g)
+		charToCodePoint(willnyaText, { separator: ",", base: 8 })
+			.split(",")
 			.map((char) => char.slice(2).replace(/\d/g, (num) => nyaLang[num]))
 			.join("\u200c") + "."
 	);
@@ -24,7 +24,7 @@ fnTextMap.set(["解喵语"], async (text) => {
 	if (!willnyaText) {
 		return "";
 	}
-	const nyaLang = ReplaceText.getVariable("nyaLang").split(",");
+	const nyaLang = variableMap.getVariable("nyaLang").split(",");
 	willnyaText = willnyaText.substring(0, willnyaText.length - 1);
 
 	const isNyaTextGrep = new RegExp(`^(${nyaLang.join("|")}|\u200c)+$`);
@@ -35,7 +35,7 @@ fnTextMap.set(["解喵语"], async (text) => {
 	return willnyaText
 		.split("\u200c")
 		.map((char) =>
-			ReplaceText.codePointToChar(
+			String.fromCodePoint(
 				"0o" +
 					char.replace(new RegExp(nyaLang.join("|"), "g"), (str) =>
 						nyaLang.indexOf(str)

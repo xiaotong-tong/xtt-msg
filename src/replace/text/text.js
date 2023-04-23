@@ -1,5 +1,7 @@
-import ReplaceText from "../.././../lib/BrowserReplaceText.js";
 import { TextMatch } from "../../textToMatchList.js";
+import xttUtils from "xtt-utils";
+const { reverse, getTermLeft, getTermRight, getRangeByTerm, strToNum } =
+	xttUtils;
 
 const textMap = new Map();
 
@@ -8,7 +10,7 @@ textMap.set(["文本-反转文本"], async (text) => {
 	if (!replaceText) {
 		return "";
 	}
-	return ReplaceText.reverseText(replaceText);
+	return reverse(replaceText);
 });
 
 textMap.set(["文本-取文本左"], async (text) => {
@@ -20,7 +22,7 @@ textMap.set(["文本-取文本左"], async (text) => {
 		return replaceText;
 	}
 
-	return ReplaceText.getTextLeft(replaceText, stamp, limit);
+	return getTermLeft(replaceText, stamp, limit);
 });
 
 textMap.set(["文本-取文本右"], async (text) => {
@@ -32,7 +34,7 @@ textMap.set(["文本-取文本右"], async (text) => {
 		return replaceText;
 	}
 
-	return ReplaceText.getTextRight(replaceText, stamp, limit);
+	return getTermRight(replaceText, stamp, limit);
 });
 
 textMap.set(["文本-取中间"], async (text) => {
@@ -41,7 +43,7 @@ textMap.set(["文本-取中间"], async (text) => {
 	if (!replaceText) {
 		return "";
 	}
-	return ReplaceText.getTextCenter(replaceText, leftStamp, rightStamp);
+	return getRangeByTerm(replaceText, [leftStamp, rightStamp]);
 });
 
 textMap.set(["文本-替换"], async (text) => {
@@ -73,7 +75,8 @@ textMap.set(["文本-取数字"], async (text) => {
 	if (!replaceText) {
 		return "";
 	}
-	return ReplaceText.getTextNum(replaceText);
+	const num = strToNum(replaceText);
+	return Number.isNaN(num) ? "" : num;
 });
 
 export { textMap };

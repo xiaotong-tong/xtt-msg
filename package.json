@@ -48,6 +48,6 @@
 	},
 	"dependencies": {
 		"sqlite3": "^5.1.4",
-		"xtt-utils": "^0.0.2-alpha.0"
+		"xtt-utils": "^0.1.0"
 	}
 }

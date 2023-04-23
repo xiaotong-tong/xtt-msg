@@ -5,13 +5,12 @@
 
 import { Replace } from "./replace.js";
 import { TextMatch } from "./textToMatchList.js";
-import ReplaceText from "../lib/BrowserReplaceText.js";
 
 class ShowText {
 	static async showText(text) {
 		// 入口函数
 		try {
-			return Replace.doReplace(text);
+			return await Replace.doReplace(text);
 		} catch (e) {
 			return e;
 		}
@@ -29,8 +28,7 @@ export default {
 		let addMatchTextList;
 		if (typeof plugin === "function") {
 			addMatchTextList = plugin({
-				TextMatch,
-				ReplaceText
+				TextMatch
 			});
 		} else if (typeof plugin === "object") {
 			addMatchTextList = plugin;

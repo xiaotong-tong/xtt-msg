@@ -1,12 +1,58 @@
-import ReplaceText from "../.././../lib/BrowserReplaceText.js";
 import { TextMatch } from "../../textToMatchList.js";
 import { Replace } from "../../replace.js";
+import { variableMap } from "../variable.js";
 
 const normalMap = new Map();
 
+function getDate(newDate = Date.now(), type) {
+	const date = new Date(newDate),
+		year = date.getFullYear(),
+		month = (date.getMonth() + 1).toString().padStart(2, "0"),
+		day = date.getDate().toString().padStart(2, "0"),
+		hour = date.getHours().toString().padStart(2, "0"),
+		minutes = date.getMinutes().toString().padStart(2, "0"),
+		seconds = date.getSeconds().toString().padStart(2, "0"),
+		week = date.getDay(),
+		weekList = [
+			"星期日",
+			"星期一",
+			"星期二",
+			"星期三",
+			"星期四",
+			"星期五",
+			"星期六"
+		];
+
+	if (!type) {
+		return `${year}-${month}-${day} ${hour}:${minutes}:${seconds}`;
+	}
+
+	if (type === "all") {
+		return `${year}-${month}-${day} ${hour}:${minutes}:${seconds} ${weekList[week]}`;
+	}
+
+	return type.replace(/=(?:[年月日时分秒]|星期)=/g, (value) => {
+		switch (value) {
+			case "=年=":
+				return year;
+			case "=月=":
+				return month;
+			case "=日=":
+				return day;
+			case "=时=":
+				return hour;
+			case "=分=":
+				return minutes;
+			case "=秒=":
+				return seconds;
+			case "=星期=":
+				return weekList[week];
+		}
+	});
+}
 normalMap.set(["当前时间"], async (text) => {
 	const [range] = await TextMatch.doTextMatchList(text);
-	return ReplaceText.getDate(Date.now(), range);
+	return getDate(Date.now(), range);
 });
 
 normalMap.set(["返回"], async (text) => {
@@ -31,8 +77,8 @@ normalMap.set(["变量"], async (text) => {
 		return "";
 	}
 	return variableValue
-		? ReplaceText.setVariable(variableName, variableValue)
-		: ReplaceText.getVariable(variableName);
+		? variableMap.setVariable(variableName, variableValue)
+		: variableMap.getVariable(variableName);
 });
 
 normalMap.set(["JSON"], async (text) => {
@@ -70,8 +116,8 @@ normalMap.set(["循环"], async (text) => {
 	const foriMap = allText.split(new RegExp(step));
 	let i = 1;
 	for (const v of foriMap) {
-		ReplaceText.setVariable("循环变量值", v);
-		ReplaceText.setVariable("循环变量次数", i);
+		variableMap.setVariable("循环变量值", v);
+		variableMap.setVariable("循环变量次数", i);
 		await Replace.doReplaceToText(foriBody);
 		i++;
 	}
@@ -84,9 +130,9 @@ normalMap.set(["循环变量"], async (text) => {
 		return "";
 	}
 	if (variableName === "值") {
-		return ReplaceText.getVariable("循环变量值");
+		return variableMap.getVariable("循环变量值");
 	} else if (variableName === "次数") {
-		return ReplaceText.getVariable("循环变量次数");
+		return variableMap.getVariable("循环变量次数");
 	} else {
 		return "";
 	}
