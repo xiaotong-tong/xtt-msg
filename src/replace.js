@@ -1,6 +1,6 @@
 import { textList } from "./replace/text/index.js";
 
-import { endsWith } from "xtt-utils/string/endsWith";
+import { endsWith } from "xtt-utils";
 
 export class Replace {
 	static backText;
@@ -45,8 +45,7 @@ export class Replace {
 					}
 					if (balance === 1) {
 						matches.push(
-							(parts[index - 1].match(/!\[[^\]]+\]$/)[0] ?? "") +
-								parts.slice(index, i + 1).join("")
+							(parts[index - 1].match(/!\[[^\]]+\]$/)[0] ?? "") + parts.slice(index, i + 1).join("")
 						);
 					}
 					balance--;
@@ -59,9 +58,7 @@ export class Replace {
 						const value = Replace.backTextPrevLevel.value;
 						Replace.backTextPrevLevel = {};
 						return value;
-					} else if (
-						Replace.backTextPrevLevel.isCurrentLevel === false
-					) {
+					} else if (Replace.backTextPrevLevel.isCurrentLevel === false) {
 						Replace.backTextPrevLevel.isCurrentLevel = true;
 					}
 					return resText;

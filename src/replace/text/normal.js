@@ -50,12 +50,12 @@ function getDate(newDate = Date.now(), type) {
 		}
 	});
 }
-normalMap.set(["当前时间"], async (text) => {
+normalMap.set(["当前时间", "now"], async (text) => {
 	const [range] = await TextMatch.doTextMatchList(text);
 	return getDate(Date.now(), range);
 });
 
-normalMap.set(["返回"], async (text) => {
+normalMap.set(["返回", "return"], async (text) => {
 	let [backText, level] = await TextMatch.doTextMatchList(text);
 	if (!backText) {
 		return "";
@@ -71,7 +71,7 @@ normalMap.set(["返回"], async (text) => {
 	return "";
 });
 
-normalMap.set(["变量"], async (text) => {
+normalMap.set(["变量", "variable"], async (text) => {
 	const [variableName, variableValue] = await TextMatch.doTextMatchList(text);
 	if (!variableName) {
 		return "";
@@ -101,7 +101,7 @@ normalMap.set(["JSON"], async (text) => {
 	}
 });
 
-normalMap.set(["循环"], async (text) => {
+normalMap.set(["循环", "forin"], async (text) => {
 	const [foriText, foriStep, foriBody] = await TextMatch.doTextMatchList(
 		text,
 		true
@@ -124,7 +124,7 @@ normalMap.set(["循环"], async (text) => {
 	return "";
 });
 
-normalMap.set(["循环变量"], async (text) => {
+normalMap.set(["循环变量", "forVariable"], async (text) => {
 	const [variableName] = await TextMatch.doTextMatchList(text);
 	if (!variableName) {
 		return "";

@@ -1,7 +1,6 @@
 import { TextMatch } from "../../textToMatchList.js";
 import { variableMap } from "../variable.js";
-import xttUtils from "xtt-utils";
-const { charToCodePoint } = xttUtils;
+import { charToCodePoint, fori, conversionBase } from "xtt-utils";
 
 const fnTextMap = new Map();
 
@@ -12,10 +11,11 @@ fnTextMap.set(["喵语"], async (text) => {
 	}
 	const nyaLang = variableMap.getVariable("nyaLang").split(",");
 	return (
-		charToCodePoint(willnyaText, { separator: ",", base: 8 })
-			.split(",")
-			.map((char) => char.slice(2).replace(/\d/g, (num) => nyaLang[num]))
-			.join("\u200c") + "."
+		fori(willnyaText, (char) =>
+			conversionBase(char.codePointAt(0), 8)
+				.slice(2)
+				.replace(/\d/g, (num) => nyaLang[num])
+		).join("\u200c") + "."
 	);
 });
 
@@ -35,12 +35,7 @@ fnTextMap.set(["解喵语"], async (text) => {
 	return willnyaText
 		.split("\u200c")
 		.map((char) =>
-			String.fromCodePoint(
-				"0o" +
-					char.replace(new RegExp(nyaLang.join("|"), "g"), (str) =>
-						nyaLang.indexOf(str)
-					)
-			)
+			String.fromCodePoint("0o" + char.replace(new RegExp(nyaLang.join("|"), "g"), (str) => nyaLang.indexOf(str)))
 		)
 		.join("");
 });

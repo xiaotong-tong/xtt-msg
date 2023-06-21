@@ -24,7 +24,7 @@ export default [
 				name: "showTextEsm"
 			}
 		],
-		external: ["xtt-utils"]
+		plugins: [nodeResolve()]
 	},
 	{
 		input: "plugins/fetch.js",

@@ -6,7 +6,7 @@ function isNodeText(text) {
 	return /^<[\s\S]+>$/.test(text);
 }
 
-htmlMap.set(["文本-注音"], async (text) => {
+htmlMap.set(["文本-注音", "text-ruby"], async (text) => {
 	const [htmlText, rt] = await TextMatch.doTextMatchList(text);
 	if (!htmlText && !rt) {
 		return "";
@@ -35,7 +35,7 @@ function setTextColor(text, color) {
 	}
 }
 
-htmlMap.set(["文本-文字颜色"], async (text) => {
+htmlMap.set(["文本-文字颜色", "text-color"], async (text) => {
 	const [htmlText, color] = await TextMatch.doTextMatchList(text);
 	if (!htmlText) {
 		return "";
@@ -54,7 +54,7 @@ function getHeimuHTML(text) {
 	}
 }
 
-htmlMap.set(["文本-黑幕"], async (text) => {
+htmlMap.set(["文本-黑幕", "text-mask"], async (text) => {
 	const [htmlText] = await TextMatch.doTextMatchList(text);
 	if (!htmlText) {
 		return "";
@@ -62,11 +62,11 @@ htmlMap.set(["文本-黑幕"], async (text) => {
 	return getHeimuHTML(htmlText);
 });
 
-htmlMap.set(["换行"], () => {
+htmlMap.set(["换行", "break"], () => {
 	return "<br />";
 });
 
-htmlMap.set(["空格"], () => {
+htmlMap.set(["空格", "space"], () => {
 	return "&nbsp;";
 });
 
