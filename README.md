@@ -2,7 +2,7 @@
 
 xtt-msg 为自用字符串解析器。传入一些字符串，会按照书写格式返回解析后的字符串结果。
 
-想查看效果请运行 `npm run build` 后查看 [demo](/demo//demo.html)
+想查看效果请运行 `npm run build` 后查看 [demo](/demo/demo.html)
 
 ## 使用
 
@@ -13,7 +13,7 @@ xtt-msg 为自用字符串解析器。传入一些字符串，会按照书写格
 ```html
 <script src="dist/showText.js"></script>
 <script>
-	showText.showTextBrowser("【随机数】")；
+	showText.showTextBrowser("![随机数](1-->>10)")；
 </script>
 ```
 
@@ -24,7 +24,7 @@ xtt-msg 为自用字符串解析器。传入一些字符串，会按照书写格
 ```javascript
 import showText from "xtt-msg";
 
-showText.showTextBrowser("【随机数】")；
+showText.showTextBrowser("![随机数](1-->>10)")；
 ```
 
 ### commonjs
@@ -32,5 +32,5 @@ showText.showTextBrowser("【随机数】")；
 ```javascript
 const { showTextBrowser } = require("xtt-msg");
 
-showTextBrowser("【随机数】")；
+showTextBrowser("![随机数](1-->>10)")；
 ```
