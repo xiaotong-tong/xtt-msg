@@ -7,7 +7,7 @@ import { Replace } from "./replace.js";
 import { TextMatch } from "./textToMatchList.js";
 
 class ShowText {
-	static async showText(text) {
+	static async replace(text) {
 		// 入口函数
 		try {
 			return await Replace.doReplace(text);
@@ -15,11 +15,18 @@ class ShowText {
 			return e;
 		}
 	}
+
+	static formatToParts(text) {
+		return Replace.formatToParts(text);
+	}
 }
 
 export default {
-	showTextBrowser: (text) => {
-		return ShowText.showText(text);
+	replace: (text) => {
+		return ShowText.replace(text);
+	},
+	formatToParts: (text) => {
+		return ShowText.formatToParts(text);
 	},
 	plugins: (plugin) => {
 		if (!plugin) {

@@ -55,20 +55,20 @@ export default [
 				name: "fileEsm"
 			}
 		]
-	},
-	{
-		input: "plugins/sqlite.js",
-		output: [
-			{
-				file: "dist/plugins/sqlite.cjs",
-				format: "cjs",
-				name: "sqliteNode"
-			},
-			{
-				file: "dist/plugins/sqlite.esm.js",
-				format: "esm",
-				name: "sqliteEsm"
-			}
-		]
 	}
+	// {
+	// 	input: "plugins/sqlite.js",
+	// 	output: [
+	// 		{
+	// 			file: "dist/plugins/sqlite.cjs",
+	// 			format: "cjs",
+	// 			name: "sqliteNode"
+	// 		},
+	// 		{
+	// 			file: "dist/plugins/sqlite.esm.js",
+	// 			format: "esm",
+	// 			name: "sqliteEsm"
+	// 		}
+	// 	]
+	// }
 ];

@@ -1,4 +1,4 @@
-import { textList } from "./replace/text/index.js";
+import { textList } from "./replace/fn/index.js";
 
 import { endsWith } from "xtt-utils";
 
@@ -12,6 +12,10 @@ export class Replace {
 		return Replace.doReplaceToText(text);
 	}
 
+	static formatToParts(text) {
+		return Replace.getParts(text).formatParts;
+	}
+
 	static async replaceAsync(str, regex, asyncFn) {
 		const promises = [];
 		str.replace(regex, (match, ...args) => {
@@ -22,35 +26,67 @@ export class Replace {
 		return str.replace(regex, () => data.shift());
 	}
 
+	static getParts(text, onlyParts = false) {
+		let parts = text.match(/[()]|[^()]+/g);
+		let formatParts = [];
+		let matches = [];
+		let balance = 0;
+		let index = 0;
+		let lastIndex = 0;
+
+		for (let i = 1; i < parts.length; i++) {
+			if (parts[i] === "(") {
+				const isCommand = endsWith(parts[i - 1], /!\[[^\]]+\]$/);
+				if (balance === 0 && !isCommand) {
+					continue;
+				}
+				if (balance === 0) {
+					index = i;
+				}
+				balance++;
+			} else if (parts[i] === ")") {
+				if (balance <= 0) {
+					continue;
+				}
+				if (balance === 1) {
+					const script =
+						(parts[index - 1].match(/!\[[^\]]+\]$/)[0] ?? "") + parts.slice(index, i + 1).join("");
+
+					matches.push(script);
+
+					parts[index - 1] = parts[index - 1].replace(/!\[[^\]]+\]$/, "");
+
+					formatParts.push(parts.slice(lastIndex, index).join(""));
+					formatParts.push(script);
+					lastIndex = i + 1;
+				}
+				balance--;
+			}
+		}
+
+		formatParts = formatParts
+			.filter((item) => item !== "")
+			.map((item) => {
+				if (item.startsWith("![") && item.endsWith(")") && /.+!\[[^\]]+\]\([\s\S]*\)/.test(item)) {
+					return {
+						value: item,
+						children: Replace.getParts(item.replace(/.+?\(|\)$/, ""), true)
+					};
+				}
+				return item;
+			});
+
+		if (onlyParts) {
+			return formatParts;
+		}
+
+		return { matches, formatParts };
+	}
+
 	static async doReplaceToText(text) {
 		if (/!\[[^\]]+\]\([\s\S]*\)/.test(text)) {
-			let parts = text.match(/[()]|[^()]+/g);
-			let matches = [];
-			let balance = 0;
-			let index = 0;
+			const { matches } = Replace.getParts(text);
 
-			for (let i = 1; i < parts.length; i++) {
-				if (parts[i] === "(") {
-					const isCommand = endsWith(parts[i - 1], /!\[[^\]]+\]$/);
-					if (balance === 0 && !isCommand) {
-						continue;
-					}
-					if (balance === 0) {
-						index = i;
-					}
-					balance++;
-				} else if (parts[i] === ")") {
-					if (balance <= 0) {
-						continue;
-					}
-					if (balance === 1) {
-						matches.push(
-							(parts[index - 1].match(/!\[[^\]]+\]$/)[0] ?? "") + parts.slice(index, i + 1).join("")
-						);
-					}
-					balance--;
-				}
-			}
 			for (const matchText of matches) {
 				const replaceFn = async (match) => {
 					const resText = await Replace.#doTextMatch(match);

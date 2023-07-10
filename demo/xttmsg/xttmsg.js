@@ -52,17 +52,12 @@ customElements.define(
 			this.#shadowRoot = this.attachShadow({ mode: "open" });
 			this.#shadowRoot.appendChild(xttMsgElement.template());
 
-			this.#shadowRoot
-				.querySelector("#run")
-				.addEventListener("click", () => {
-					this.#doShowText();
-				});
+			this.#shadowRoot.querySelector("#run").addEventListener("click", () => {
+				this.#doShowText();
+			});
 			const left = this.#shadowRoot.querySelector("#leftContent");
 
-			const doChangeHighlight = throttle(
-				this.#changeHighlight.bind(this),
-				1000
-			);
+			const doChangeHighlight = throttle(this.#changeHighlight.bind(this), 1000);
 			left.addEventListener("input", () => {
 				doChangeHighlight();
 			});
@@ -81,8 +76,7 @@ customElements.define(
 			if (!CSS.highlights) {
 				return;
 			}
-			const left =
-				this.#shadowRoot.querySelector("#leftContent").firstChild;
+			const left = this.#shadowRoot.querySelector("#leftContent").firstChild;
 
 			const rangeList = [];
 
@@ -98,9 +92,7 @@ customElements.define(
 				highlight = CSS.highlights.get("xtt-highlight");
 
 				if (this.#oldRangeList.length) {
-					this.#oldRangeList.forEach((range) =>
-						highlight.delete(range)
-					);
+					this.#oldRangeList.forEach((range) => highlight.delete(range));
 				}
 
 				rangeList.forEach((range) => highlight.add(range));
@@ -118,7 +110,7 @@ customElements.define(
 			const start = Date.now();
 			const text = left.textContent;
 			console.time(text);
-			right.innerHTML = await window.showText.showTextBrowser(text);
+			right.innerHTML = await window.showText.replace(text);
 			console.timeEnd(text);
 			time.textContent = "用时: " + (Date.now() - start) + "ms";
 		}
