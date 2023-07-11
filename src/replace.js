@@ -1,5 +1,4 @@
 import { textList } from "./replace/fn/index.js";
-
 import { endsWith } from "xtt-utils";
 
 export class Replace {
@@ -62,6 +61,10 @@ export class Replace {
 				}
 				balance--;
 			}
+		}
+
+		if (lastIndex < parts.length) {
+			formatParts.push(parts.slice(lastIndex, parts.length).join(""));
 		}
 
 		formatParts = formatParts
