@@ -12,16 +12,10 @@
 				"default": "./dist/showText.esm.js"
 			}
 		},
-		"./plugin-fetch": {
+		"./plugin/*": {
 			"default": {
-				"require": "./dist/plugins/fetch.cjs",
-				"default": "./dist/plugins/fetch.esm.js"
-			}
-		},
-		"./plugin-file": {
-			"default": {
-				"require": "./dist/plugins/file.cjs",
-				"default": "./dist/plugins/file.esm.js"
+				"require": "./dist/plugins/*.cjs",
+				"default": "./dist/plugins/*.esm.js"
 			}
 		}
 	},
