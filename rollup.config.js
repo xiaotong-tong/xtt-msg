@@ -1,14 +1,24 @@
 import { nodeResolve } from "@rollup/plugin-node-resolve";
+import terser from "@rollup/plugin-terser";
 
 export default [
 	{
 		input: "src/showText.js",
 		output: {
 			file: "dist/showText.js",
-			name: "showText",
+			name: "xttMsg",
 			format: "umd"
 		},
 		plugins: [nodeResolve()]
+	},
+	{
+		input: "src/showText.js",
+		output: {
+			file: "dist/showText.min.js",
+			name: "xttMsg",
+			format: "umd"
+		},
+		plugins: [nodeResolve(), terser()]
 	},
 	{
 		input: "src/showText.js",
