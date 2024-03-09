@@ -6,13 +6,34 @@
 import { Replace } from "./replace.js";
 import { TextMatch } from "./textToMatchList.js";
 
-const replace = async (text) => {
-	// 入口函数
-	try {
-		return await Replace.doReplace(text);
-	} catch (e) {
-		return e;
+const catchPromiseList = [
+	{
+		promise: Promise.resolve(),
+		resolve: Promise.resolve()
 	}
+];
+const replace = (text) => {
+	const catchPromist = {};
+
+	catchPromist.promise = new Promise(async (resolve) => {
+		catchPromist.resolve = resolve;
+
+		try {
+			// 等待上一个promise完成, 防止并发, 保证顺序, 即使上一个promise失败, 也不会影响当前promise的执行
+			await catchPromiseList[catchPromiseList.length - 1].promise;
+		} finally {
+			try {
+				const res = await Replace.doReplace(text);
+				resolve(res);
+			} catch (e) {
+				resolve(e);
+			}
+		}
+	});
+
+	catchPromiseList.push(catchPromist);
+
+	return catchPromist.promise;
 };
 /**
  * 格式化文本字符串
