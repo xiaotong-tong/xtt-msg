@@ -1,10 +1,13 @@
 {
 	"name": "xtt-msg",
-	"version": "2.0.0",
+	"version": "2.0.1-alpha.1",
 	"description": "a text processing lib",
 	"main": "dist/showText.js",
 	"module": "dist/showText.esm.js",
 	"type": "module",
+	"files": [
+		"dist"
+	],
 	"exports": {
 		".": {
 			"default": {

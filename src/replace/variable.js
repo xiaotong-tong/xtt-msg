@@ -19,6 +19,10 @@ export class variableMap {
 		return res;
 	}
 	static setVariable(key, value) {
+		value = value.replace(/\\u[0123456789abcdef]{4,}/g, function (code) {
+			return String.fromCharCode(parseInt(code.substr(2, 4), 16));
+		});
+
 		this.variableMap[key] = value;
 		return "";
 	}

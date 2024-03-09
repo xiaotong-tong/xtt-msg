@@ -24,6 +24,7 @@ const replace = async (text) => {
 const formatToParts = (text) => {
 	return Replace.formatToParts(text);
 };
+
 const plugins = (plugin) => {
 	if (!plugin) {
 		return;
